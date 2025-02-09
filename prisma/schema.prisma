@@ -12,6 +12,7 @@ model Product {
   externalId   String         @unique
   displayName  String
   priceHistory PriceHistory[]
+  isDeleted    Boolean        @default(false)
 }
 
 model PriceHistory {

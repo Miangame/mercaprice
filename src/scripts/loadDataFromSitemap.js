@@ -6,7 +6,36 @@ const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
 
-async function readSitemap(urlOrPath) {
+const saveToErrorLog = async (message) => {
+  const date = new Date().toISOString()
+  try {
+    await fs.appendFileSync('error.log', `${date}: ${message}\n`, 'utf8')
+  } catch (error) {
+    console.error('Error al guardar en el log de errores:', error.message)
+  }
+}
+
+const sendTelegramMessage = async (message) => {
+  const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`
+
+  try {
+    await axios.post(url, {
+      chat_id: process.env.TELEGRAM_CHAT_ID,
+      text: message
+    })
+  } catch (error) {
+    await saveToErrorLog(
+      `Error al enviar mensaje de Telegram: ${error.message}`
+    )
+  }
+}
+
+const readSitemap = async (urlOrPath) => {
+  const invalidUrlErrors = []
+  const saveErrors = []
+
+  const startTime = Date.now()
+
   try {
     let xmlData
 
@@ -52,6 +81,11 @@ async function readSitemap(urlOrPath) {
                 displayName: product.display_name
               }
             })
+          } else if (existProductInDB.displayName !== product.display_name) {
+            existProductInDB = await prisma.product.update({
+              where: { id: existProductInDB.id },
+              data: { displayName: product.display_name }
+            })
           }
 
           const currentUnitPrice = parseFloat(
@@ -96,17 +130,46 @@ async function readSitemap(urlOrPath) {
           console.log('Productos restantes', urls.length - urls.indexOf(url))
           skipRateLimit--
         } catch (error) {
-          const message = `Error al guardar el producto ${url}: ${error.message}`
-          fs.appendFileSync('errors.log', message + '\n')
+          await saveToErrorLog(
+            `Error al guardar el producto ${url}: ${error.message}`
+          )
+          saveErrors.push(`${url}: ${error.message}`)
         }
+      } else {
+        await saveToErrorLog(`URL inválida: ${url}`)
+        invalidUrlErrors.push(url)
       }
     }
 
     console.log('Número de URLs encontradas:', urls.length)
 
+    const endTime = Date.now()
+    const executionTimeMs = endTime - startTime
+    const executionTimeSec = (executionTimeMs / 1000).toFixed(2)
+    const executionTimeMin = (executionTimeMs / 60000).toFixed(2)
+
+    const telegramMessage = `
+      🚀 *Ejecución del Script Finalizada* 🚀
+
+      📊 *Resultados*:
+      🔹 URLs procesadas: *${urls.length}*
+      ✅ Productos guardados: *${urls.length - saveErrors.length - invalidUrlErrors.length}*
+      ⚠️ Productos con error: *${saveErrors.length}*
+      ❌ URLs inválidas: *${invalidUrlErrors.length}*
+
+      ${saveErrors.length > 0 ? `🛑 *Errores en productos*: \n${saveErrors.slice(0, 5).join('\n')}\n\n` : ''}
+      ${invalidUrlErrors.length > 0 ? `⚠️ *URLs inválidas*: \n${invalidUrlErrors.slice(0, 5).join('\n')}\n\n` : ''}
+
+      ⏳ *Tiempo de ejecución:* ${executionTimeMin} min (${executionTimeSec} seg)
+      📅 *Fecha de ejecución:* ${new Date().toLocaleString()}
+    `
+
+    await sendTelegramMessage(telegramMessage)
+
     return urls
   } catch (error) {
-    console.error('Error al leer el sitemap:', error.message)
+    await saveToErrorLog(`Error al leer el sitemap: ${error.message}`)
+    await sendTelegramMessage(`Error al leer el sitemap: ${error.message}`)
   }
 }
 
