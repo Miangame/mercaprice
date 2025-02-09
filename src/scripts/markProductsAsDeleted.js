@@ -32,7 +32,6 @@ const sendTelegramMessage = async (message) => {
 
 const markProductsAsDeleted = async (urlOrPath) => {
   const startTime = Date.now()
-  const invalidUrlErrors = []
   const updateErrors = []
   let deletedProductsCount = 0
 
