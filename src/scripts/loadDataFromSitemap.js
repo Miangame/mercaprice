@@ -130,12 +130,14 @@ const readSitemap = async (urlOrPath) => {
           console.log('Productos restantes', urls.length - urls.indexOf(url))
           skipRateLimit--
         } catch (error) {
+          console.log('Error al guardar el producto:', error.message)
           await saveToErrorLog(
             `Error al guardar el producto ${url}: ${error.message}`
           )
           saveErrors.push(`${url}: ${error.message}`)
         }
       } else {
+        console.log('URL inválida:', url)
         await saveToErrorLog(`URL inválida: ${url}`)
         invalidUrlErrors.push(url)
       }
