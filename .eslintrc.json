@@ -26,6 +26,7 @@
           ["internal", "sibling", "index", "unknown"]
         ]
       }
-    ]
+    ],
+    "import/newline-after-import": ["error", { "count": 1 }]
   }
 }

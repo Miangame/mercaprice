@@ -8,12 +8,15 @@
     "start": "next start",
     "lint": "next lint",
     "prepare": "husky",
-    "loadSitemap": "node src/scripts/loadDataFromSitemap.js"
+    "loadDataFromSitemap": "node src/scripts/loadDataFromSitemap.js"
   },
   "dependencies": {
+    "@prisma/client": "^6.2.1",
+    "@types/xml2js": "^0.4.14",
     "@vercel/analytics": "^1.4.1",
     "axios": "^1.7.9",
     "next": "15.1.6",
+    "prisma": "^6.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "styled-components": "^6.1.14",

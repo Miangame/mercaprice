@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id           String         @id @default(uuid()) @db.Uuid
+  externalId   String         @unique
+  displayName  String
+  priceHistory PriceHistory[]
+}
+
+model PriceHistory {
+  id         Int      @id @default(autoincrement())
+  productId  String   @db.Uuid
+  product    Product  @relation(fields: [productId], references: [id])
+  bulkPrice  Float
+  unitPrice  Float
+  recordedAt DateTime @default(now())
+}
