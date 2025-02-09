@@ -12,13 +12,13 @@ model Product {
   externalId   String         @unique
   displayName  String
   priceHistory PriceHistory[]
-  isDeleted    Boolean        @default(false)
+  deletedAt    DateTime?
 }
 
 model PriceHistory {
   id         Int      @id @default(autoincrement())
   productId  String   @db.Uuid
-  product    Product  @relation(fields: [productId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   bulkPrice  Float
   unitPrice  Float
   recordedAt DateTime @default(now())
