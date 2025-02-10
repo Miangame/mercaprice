@@ -143,7 +143,7 @@ const readSitemap = async (urlOrPath) => {
             data: { deletedAt: new Date() }
           })
 
-          console.log('Error al guardar el producto:', error.message)
+          console.log(`Error al guardar el producto ${url}:`, error.message)
           await saveToErrorLog(
             `Error al guardar el producto ${url}: ${error.message}`
           )
