@@ -33,6 +33,9 @@ const sendTelegramMessage = async (message) => {
 const readSitemap = async (urlOrPath) => {
   const invalidUrlErrors = []
   const saveErrors = []
+  const newProducts = 0
+  const updatedProducts = 0
+  const updatedPrices = 0
 
   const startTime = Date.now()
 
@@ -81,11 +84,13 @@ const readSitemap = async (urlOrPath) => {
                 displayName: product.display_name
               }
             })
+            newProducts++
           } else if (existProductInDB.displayName !== product.display_name) {
             existProductInDB = await prisma.product.update({
               where: { id: existProductInDB.id },
               data: { displayName: product.display_name }
             })
+            updatedProducts++
           }
 
           const currentUnitPrice = parseFloat(
@@ -116,6 +121,7 @@ const readSitemap = async (urlOrPath) => {
             console.log(
               `Nuevo precio guardado para ${product.display_name}: ${currentUnitPrice}`
             )
+            updatedPrices++
           }
 
           if (skipRateLimit === 0) {
@@ -162,7 +168,10 @@ const readSitemap = async (urlOrPath) => {
 
       📊 *Resultados*:
       🔹 URLs procesadas: *${urls.length}*
-      ✅ Productos guardados: *${urls.length - saveErrors.length - invalidUrlErrors.length}*
+      ✅ Productos checkeados: *${urls.length - saveErrors.length - invalidUrlErrors.length}*
+      🥑 Productos nuevos: *${newProducts}*
+      🔄 Productos actualizados: *${updatedProducts}*
+      🤑 Precios actualizados: *${updatedPrices}*
       ⚠️ Productos con error: *${saveErrors.length}*
       ❌ URLs inválidas: *${invalidUrlErrors.length}*
 
