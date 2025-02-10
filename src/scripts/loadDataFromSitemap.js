@@ -138,14 +138,10 @@ const readSitemap = async (urlOrPath) => {
         } catch (error) {
           const productId = productIdMatch[0]
 
-          console.log({ productId })
-
-          const productUpdated = prisma.product.update({
+          await prisma.product.update({
             where: { externalId: productId },
             data: { deletedAt: new Date() }
           })
-
-          console.log({ productUpdated })
 
           console.log(`Error al guardar el producto ${url}:`, error.message)
           await saveToErrorLog(
