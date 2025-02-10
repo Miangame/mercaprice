@@ -130,6 +130,13 @@ const readSitemap = async (urlOrPath) => {
           console.log('Productos restantes', urls.length - urls.indexOf(url))
           skipRateLimit--
         } catch (error) {
+          const productId = productIdMatch[0]
+
+          prisma.product.update({
+            where: { externalId: productId },
+            data: { deletedAt: new Date() }
+          })
+
           console.log('Error al guardar el producto:', error.message)
           await saveToErrorLog(
             `Error al guardar el producto ${url}: ${error.message}`
