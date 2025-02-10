@@ -33,9 +33,9 @@ const sendTelegramMessage = async (message) => {
 const readSitemap = async (urlOrPath) => {
   const invalidUrlErrors = []
   const saveErrors = []
-  const newProducts = 0
-  const updatedProducts = 0
-  const updatedPrices = 0
+  let newProducts = 0
+  let updatedProducts = 0
+  let updatedPrices = 0
 
   const startTime = Date.now()
 
