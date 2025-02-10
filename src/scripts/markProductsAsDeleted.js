@@ -93,6 +93,8 @@ const markProductsAsDeleted = async (urlOrPath) => {
 
     let skipRateLimit = 50
 
+    let remainingProducts = storedProducts.length
+
     for (const product of storedProducts) {
       try {
         const productId = product.externalId
@@ -106,7 +108,9 @@ const markProductsAsDeleted = async (urlOrPath) => {
           skipRateLimit = 50
         }
 
+        console.log(`Productos restantes: ${remainingProducts}`)
         skipRateLimit--
+        remainingProducts--
       } catch (error) {
         console.error(
           `Error al comprobar el producto ID ${product.externalId}: ${error.message}`
