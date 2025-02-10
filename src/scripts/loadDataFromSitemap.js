@@ -68,7 +68,7 @@ const readSitemap = async (urlOrPath) => {
       if (productIdMatch) {
         try {
           const productId = productIdMatch[0]
-          const fetchUrl = `https://tienda.mercadona.es/api/products/${productId}/?lang=es&wh=4694`
+          const fetchUrl = `https://tienda.mercadona.es/api/products/${productId}`
 
           const response = await axios.get(fetchUrl)
           const product = response.data

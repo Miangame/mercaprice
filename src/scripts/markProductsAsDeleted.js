@@ -98,7 +98,7 @@ const markProductsAsDeleted = async (urlOrPath) => {
     for (const product of storedProducts) {
       try {
         const productId = product.externalId
-        const fetchUrl = `https://tienda.mercadona.es/api/products/${productId}/?lang=es&wh=4694`
+        const fetchUrl = `https://tienda.mercadona.es/api/products/${productId}`
 
         await axios.get(fetchUrl)
 
