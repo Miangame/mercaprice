@@ -23,7 +23,8 @@ const sendTelegramMessage = async (message) => {
   try {
     await axios.post(url, {
       chat_id: process.env.TELEGRAM_CHAT_ID,
-      text: message
+      text: message,
+      parse_mode: 'MarkdownV2'
     })
   } catch (error) {
     await saveToErrorLog(
@@ -37,6 +38,8 @@ const markProductsAsDeleted = async (urlOrPath) => {
   const updateErrors = []
   let deletedProductsNotInSitemapCount = 0
   let deletedProductsCount = 0
+
+  await sendTelegramMessage('🚀 Starting script for delete products...')
 
   try {
     let xmlData

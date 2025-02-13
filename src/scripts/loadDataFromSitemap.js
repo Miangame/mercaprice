@@ -23,7 +23,8 @@ const sendTelegramMessage = async (message) => {
   try {
     await axios.post(url, {
       chat_id: process.env.TELEGRAM_CHAT_ID,
-      text: message
+      text: message,
+      parse_mode: 'MarkdownV2'
     })
   } catch (error) {
     await saveToErrorLog(
@@ -59,6 +60,8 @@ const fetchProduct = async (productIdMatch) => {
   const fetchUrl = `https://tienda.mercadona.es/api/products/${productId}`
   let response
   let skipRateLimit = SKIP_RATE_LIMIT
+
+  await sendTelegramMessage('🚀 Starting products update...')
 
   try {
     response = await axios.get(fetchUrl)
