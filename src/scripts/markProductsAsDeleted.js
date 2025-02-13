@@ -148,6 +148,7 @@ const markProductsAsDeleted = async (urlOrPath) => {
               foundProduct = true
 
               break
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {}
           }
         }

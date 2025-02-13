@@ -88,6 +88,7 @@ const fetchProduct = async (productIdMatch) => {
           skipRateLimit--
 
           break
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e) {}
       }
     }
