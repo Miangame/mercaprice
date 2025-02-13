@@ -44,7 +44,7 @@
     "*.(ts|tsx|html|scss)": [
       "prettier --write"
     ],
-    "*.{ts,tsx}": [
+    "*.{js,ts,tsx}": [
       "eslint '*/**/*.{js,ts,tsx}' --quiet --fix"
     ]
   }
