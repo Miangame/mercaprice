@@ -6,6 +6,8 @@ const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
 
+const SKIP_RATE_LIMIT = 10
+
 const saveToErrorLog = async (message) => {
   const date = new Date().toISOString()
   try {
@@ -91,7 +93,7 @@ const markProductsAsDeleted = async (urlOrPath) => {
       }
     }
 
-    let skipRateLimit = 50
+    let skipRateLimit = SKIP_RATE_LIMIT
 
     let remainingProducts = storedProducts.length
 
@@ -103,25 +105,66 @@ const markProductsAsDeleted = async (urlOrPath) => {
         await axios.get(fetchUrl)
 
         if (skipRateLimit === 0) {
-          console.log('\n--- Esperando 5 segundos para evitar rate limit ---\n')
-          await new Promise((resolve) => setTimeout(resolve, 5000))
-          skipRateLimit = 50
+          console.log(
+            '\n--- Esperando 10 segundos para evitar rate limit ---\n'
+          )
+          await new Promise((resolve) => setTimeout(resolve, 10000))
+          skipRateLimit = SKIP_RATE_LIMIT
         }
 
         console.log(`Productos restantes: ${remainingProducts}`)
         skipRateLimit--
         remainingProducts--
       } catch (error) {
-        console.error(
-          `Error al comprobar el producto ID ${product.externalId}: ${error.message}`
-        )
-        await prisma.product.update({
-          where: { id: product.id },
-          data: {
-            deletedAt: new Date()
+        let isDeleted = false
+        let foundProduct = false
+
+        const skipRateLimitWh = SKIP_RATE_LIMIT
+
+        if (error.response?.status === 404) {
+          isDeleted = true
+        } else {
+          const whs = prisma.warehouse.findMany()
+
+          for (const wh of whs) {
+            try {
+              await axios.get(`${fetchUrl}/?lang=es&wh=${wh.externalId}`)
+
+              console.log('🏬 Producto encontrado con almacén:', wh.externalId)
+              await saveToErrorLog(
+                `Producto encontrado con almacén: ${wh.externalId}`
+              )
+
+              if (skipRateLimitWh === 0) {
+                console.log(
+                  '\n⚠️ --- Esperando 5 segundos para evitar rate limit --- ⚠️\n'
+                )
+                await new Promise((resolve) => setTimeout(resolve, 5000))
+                skipRateLimitWh = SKIP_RATE_LIMIT
+              }
+
+              skipRateLimitWh--
+
+              foundProduct = true
+
+              break
+            } catch (e) {}
           }
-        })
-        deletedProductsCount++
+        }
+
+        if (!foundProduct) {
+          isDeleted = true
+        }
+
+        if (isDeleted) {
+          await prisma.product.update({
+            where: { id: product.id },
+            data: {
+              deletedAt: new Date()
+            }
+          })
+          deletedProductsCount++
+        }
       }
     }
 

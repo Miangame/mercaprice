@@ -23,3 +23,10 @@ model PriceHistory {
   unitPrice  Float
   recordedAt DateTime @default(now())
 }
+
+model Warehouse {
+  id          String         @id @default(uuid()) @db.Uuid
+  externalId  String         @unique
+  postalCode  String
+  deletedAt   DateTime?
+}
