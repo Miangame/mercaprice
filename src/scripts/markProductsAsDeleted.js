@@ -13,7 +13,7 @@ const saveToErrorLog = async (message) => {
   try {
     await fs.appendFileSync('error.log', `${date}: ${message}\n`, 'utf8')
   } catch (error) {
-    console.error('Error al guardar en el log de errores:', error.message)
+    console.error('Error saving in error.log:', error.message)
   }
 }
 
@@ -24,7 +24,7 @@ const sendTelegramMessage = async (message) => {
     await axios.post(url, {
       chat_id: process.env.TELEGRAM_CHAT_ID,
       text: message,
-      parse_mode: 'MarkdownV2'
+      parse_mode: 'Markdown'
     })
   } catch (error) {
     await saveToErrorLog(
@@ -61,7 +61,7 @@ const markProductsAsDeleted = async (urlOrPath) => {
       )
       .map((url) => url.match(/[0-9]+(?:\.[0-9]+)?/)[0])
 
-    console.log('Número de productos en el sitemap:', sitemapProductIds.length)
+    console.log('🌐 URls found in sitemap', sitemapProductIds.length)
 
     const storedProducts = await prisma.product.findMany({
       where: {
@@ -75,7 +75,7 @@ const markProductsAsDeleted = async (urlOrPath) => {
     )
 
     console.log(
-      'Número de productos a marcar como eliminados:',
+      'Number of products to mark as deleted:',
       productsToDelete.length
     )
 
@@ -88,9 +88,10 @@ const markProductsAsDeleted = async (urlOrPath) => {
           }
         })
         deletedProductsNotInSitemapCount++
+        console.log('❌ Deleted product not in sitemap:', product.id)
       } catch (error) {
         await saveToErrorLog(
-          `Error al marcar como eliminado el producto ID ${product.externalId}: ${error.message}`
+          `Error marking as deleted product with ID ${product.externalId}: ${error.message}`
         )
         updateErrors.push(`Producto ${product.externalId}: ${error.message}`)
       }
@@ -109,13 +110,13 @@ const markProductsAsDeleted = async (urlOrPath) => {
 
         if (skipRateLimit === 0) {
           console.log(
-            '\n--- Esperando 10 segundos para evitar rate limit ---\n'
+            '\n⚠️ --- Waiting 10 seconds to avoid rate limit --- ⚠️\n'
           )
           await new Promise((resolve) => setTimeout(resolve, 10000))
           skipRateLimit = SKIP_RATE_LIMIT
         }
 
-        console.log(`Productos restantes: ${remainingProducts}`)
+        console.log(`Remaining products: ${remainingProducts}`)
         skipRateLimit--
         remainingProducts--
       } catch (error) {
@@ -127,22 +128,22 @@ const markProductsAsDeleted = async (urlOrPath) => {
         if (error.response?.status === 404) {
           isDeleted = true
         } else {
-          const whs = prisma.warehouse.findMany()
+          const whs = await prisma.warehouse.findMany()
 
           for (const wh of whs) {
             try {
               await axios.get(`${fetchUrl}/?lang=es&wh=${wh.externalId}`)
 
-              console.log('🏬 Producto encontrado con almacén:', wh.externalId)
+              console.log('🏬 Product found in warehouse:', wh.externalId)
               await saveToErrorLog(
-                `Producto encontrado con almacén: ${wh.externalId}`
+                `Product found in warehouse: ${wh.externalId}`
               )
 
               if (skipRateLimitWh === 0) {
                 console.log(
-                  '\n⚠️ --- Esperando 5 segundos para evitar rate limit --- ⚠️\n'
+                  '\n⚠️ --- Waiting 10 seconds to avoid rate limit --- ⚠️\n'
                 )
-                await new Promise((resolve) => setTimeout(resolve, 5000))
+                await new Promise((resolve) => setTimeout(resolve, 10000))
                 skipRateLimitWh = SKIP_RATE_LIMIT
               }
 
@@ -168,6 +169,7 @@ const markProductsAsDeleted = async (urlOrPath) => {
             }
           })
           deletedProductsCount++
+          console.log('❌ Deleted product:', product.id)
         }
       }
     }
@@ -178,24 +180,25 @@ const markProductsAsDeleted = async (urlOrPath) => {
     const executionTimeMin = (executionTimeMs / 60000).toFixed(2)
 
     const telegramMessage = `
-      🚀 *Actualización de Productos Finalizada* 🚀
+      🚀 *Update products finished* 🚀
 
-      📊 *Resultados*:
-      🔹 Productos en el sitemap: *${sitemapProductIds.length}*
-      ✅ Productos eliminados no en sitemap: *${deletedProductsNotInSitemapCount}*
-      ❌ Productos eliminados: *${deletedProductsCount}*
-      ⚠️ Errores al eliminar: *${updateErrors.length}*
+      📊 *Results*:
+      🔹 Products in sitemap: *${sitemapProductIds.length}*
+      ✅ Deleted products not in sitemap: *${deletedProductsNotInSitemapCount}*
+      ❌ Deleted products: *${deletedProductsCount}*
+      ⚠️ Delete errors: *${updateErrors.length}*
 
-      ${updateErrors.length > 0 ? `🛑 *Errores al eliminar productos*: \n${updateErrors.slice(0, 5).join('\n')}\n\n` : ''}
+      ${updateErrors.length > 0 ? `🛑 *Errors deleting products*: \n${updateErrors.slice(0, 5).join('\n')}\n\n` : ''}
 
-      ⏳ *Tiempo de ejecución:* ${executionTimeMin} min (${executionTimeSec} seg)
-      📅 *Fecha de ejecución:* ${new Date().toLocaleString()}
+      ⏳ *Time execution:* ${executionTimeMin} min (${executionTimeSec} seg)
+      📅 *Execution date:* ${new Date().toLocaleString()}
     `
 
     await sendTelegramMessage(telegramMessage)
   } catch (error) {
-    await saveToErrorLog(`Error general en el script: ${error.message}`)
-    await sendTelegramMessage(`❌ Error en el script: ${error.message}`)
+    console.log('❌ General error in script:', error.message)
+    await saveToErrorLog(`General error in script: ${error.message}`)
+    await sendTelegramMessage(`❌ General error in script: ${error.message}`)
   }
 }
 

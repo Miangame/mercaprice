@@ -13,7 +13,7 @@ const saveToErrorLog = async (message) => {
   try {
     await fs.appendFileSync('error.log', `${date}: ${message}\n`, 'utf8')
   } catch (error) {
-    console.error('Error al guardar en el log de errores:', error.message)
+    console.error('Error saving in error.log:', error.message)
   }
 }
 
@@ -24,12 +24,10 @@ const sendTelegramMessage = async (message) => {
     await axios.post(url, {
       chat_id: process.env.TELEGRAM_CHAT_ID,
       text: message,
-      parse_mode: 'MarkdownV2'
+      parse_mode: 'Markdown'
     })
   } catch (error) {
-    await saveToErrorLog(
-      `Error al enviar mensaje de Telegram: ${error.message}`
-    )
+    await saveToErrorLog(`Error sending telegram message: ${error.message}`)
   }
 }
 
@@ -69,7 +67,7 @@ const fetchProduct = async (productIdMatch) => {
     if (error.response?.status === 404) {
       throw error
     } else {
-      const whs = prisma.warehouse.findMany()
+      const whs = await prisma.warehouse.findMany()
 
       for (const wh of whs) {
         try {
