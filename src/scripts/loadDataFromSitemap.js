@@ -1,12 +1,48 @@
 const fs = require('fs')
+const http = require('http')
 
 const axios = require('axios')
 const xml2js = require('xml2js')
 const { PrismaClient } = require('@prisma/client')
+const express = require('express')
+const { Server } = require('socket.io')
 
 const prisma = new PrismaClient()
 
 const SKIP_RATE_LIMIT = 10
+
+const app = express()
+const server = http.createServer(app)
+const io = new Server(server)
+
+const logs = []
+
+const originalConsoleLog = console.log
+console.log = (...args) => {
+  const message = `[${new Date().toISOString()}] ` + args.join(' ')
+  logs.push(message)
+  if (logs.length > 500) logs.shift()
+
+  originalConsoleLog(...args)
+  io.emit('new_log', message)
+}
+
+app.get('/logs', (req, res) => {
+  res.sendFile(__dirname + '/logs.html')
+})
+
+app.get('/logs-data', (req, res) => {
+  res.json(logs)
+})
+
+io.on('connection', (socket) => {
+  console.log('🟢 Client connected to WebSockets')
+  socket.emit('logs', logs)
+})
+
+server.listen(3000, () =>
+  console.log('📡 Logs server in http://localhost:3000/logs')
+)
 
 const saveToErrorLog = async (message) => {
   const date = new Date().toISOString()

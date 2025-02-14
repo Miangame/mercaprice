@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real time logs</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #1e1e1e;
+        color: #ffffff;
+        padding: 20px;
+      }
+      #logs {
+        white-space: pre-wrap;
+        background: black;
+        padding: 10px;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>📡 Real time logs</h2>
+    <div id="logs"></div>
+
+    <script>
+      const socket = io()
+      const logsDiv = document.getElementById('logs')
+
+      fetch('/logs-data')
+        .then((response) => response.json())
+        .then((data) => {
+          logsDiv.innerHTML = data.join('<br>')
+        })
+
+      socket.on('new_log', (log) => {
+        logsDiv.innerHTML += '<br>' + log
+        logsDiv.scrollTop = logsDiv.scrollHeight
+      })
+    </script>
+  </body>
+</html>
