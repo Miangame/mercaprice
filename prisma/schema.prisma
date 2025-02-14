@@ -8,11 +8,13 @@ datasource db {
 }
 
 model Product {
-  id           String         @id @default(uuid()) @db.Uuid
-  externalId   String         @unique
+  id           String                  @id @default(uuid()) @db.Uuid
+  externalId   String                  @unique
   displayName  String
   priceHistory PriceHistory[]
   deletedAt    DateTime?
+  searchvector Unsupported("tsvector")
+  image        String?
 }
 
 model PriceHistory {
@@ -25,8 +27,8 @@ model PriceHistory {
 }
 
 model Warehouse {
-  id          String         @id @default(uuid()) @db.Uuid
-  externalId  String         @unique
-  postalCode  String
-  deletedAt   DateTime?
+  id         String    @id @default(uuid()) @db.Uuid
+  externalId String    @unique
+  postalCode String
+  deletedAt  DateTime?
 }

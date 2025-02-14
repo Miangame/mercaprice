@@ -158,6 +158,7 @@ const readSitemap = async (urlOrPath) => {
       if (productIdMatch) {
         try {
           const product = await fetchProduct(productIdMatch)
+          const image = product.photos[0]?.regular || product.thumbnail
 
           let existProductInDB = await prisma.product.findUnique({
             where: { externalId: product.id }
@@ -168,7 +169,8 @@ const readSitemap = async (urlOrPath) => {
             existProductInDB = await prisma.product.create({
               data: {
                 externalId: product.id,
-                displayName: product.display_name
+                displayName: product.display_name,
+                image: image || ''
               }
             })
 
@@ -185,6 +187,13 @@ const readSitemap = async (urlOrPath) => {
             console.log('🔄 Product updated:', product.display_name)
 
             updatedProducts++
+          } else if (image && existProductInDB.image !== image) {
+            existProductInDB = await prisma.product.update({
+              where: { id: existProductInDB.id },
+              data: { image }
+            })
+
+            console.log('🔄 Product image updated:', product.display_name)
           }
 
           const currentUnitPrice = parseFloat(
