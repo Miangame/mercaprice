@@ -231,6 +231,8 @@ const markProductsAsDeleted = async (urlOrPath) => {
     `
 
     await sendTelegramMessage(telegramMessage)
+
+    server.close()
   } catch (error) {
     console.log('❌ General error in script:', error.message)
     await saveToErrorLog(`General error in script: ${error.message}`)

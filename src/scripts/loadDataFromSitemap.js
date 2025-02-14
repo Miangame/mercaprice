@@ -288,6 +288,8 @@ const readSitemap = async (urlOrPath) => {
 
     await sendTelegramMessage(telegramMessage)
 
+    server.close()
+
     return urls
   } catch (error) {
     await saveToErrorLog(`Error reading sitemap: ${error.message}`)
