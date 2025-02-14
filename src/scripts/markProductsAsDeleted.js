@@ -180,7 +180,7 @@ const markProductsAsDeleted = async (urlOrPath) => {
     const executionTimeMin = (executionTimeMs / 60000).toFixed(2)
 
     const telegramMessage = `
-      🚀 *Update products finished* 🚀
+      🚀 *Delete products finished* 🚀
 
       📊 *Results*:
       🔹 Products in sitemap: *${sitemapProductIds.length}*

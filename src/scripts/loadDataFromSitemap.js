@@ -59,8 +59,6 @@ const fetchProduct = async (productIdMatch) => {
   let response
   let skipRateLimit = SKIP_RATE_LIMIT
 
-  await sendTelegramMessage('🚀 Starting products update...')
-
   try {
     response = await axios.get(fetchUrl)
   } catch (error) {
@@ -108,6 +106,8 @@ const readSitemap = async (urlOrPath) => {
   let updatedPrices = 0
 
   const startTime = Date.now()
+
+  await sendTelegramMessage('🚀 Starting products update...')
 
   try {
     const urls = await fetchUrls(urlOrPath)
