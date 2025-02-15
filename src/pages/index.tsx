@@ -14,10 +14,29 @@ export default function Home() {
 
   if (isLoading) return <p>Cargando...</p>
   if (error) return <p>Hubo un error al cargar los resultados.</p>
-  console.log({ data })
+
   return (
     <>
-      <h1>Next.js + TypeScript + Styled Components</h1>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '1rem',
+          marginTop: '1rem'
+        }}
+      >
+        {data?.map((result: any) => (
+          <div key={result.id}>
+            <img
+              src={result.image}
+              alt={result.title}
+              style={{ width: '100%' }}
+            />
+            <h2>{result.title}</h2>
+            <p>{result.overview}</p>
+          </div>
+        ))}
+      </div>
     </>
   )
 }

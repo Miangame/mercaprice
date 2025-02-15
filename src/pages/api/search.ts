@@ -26,7 +26,7 @@ export default async function handler(
       .join(' & ')
 
     const products = await prisma.$queryRaw`
-      SELECT "Product"."id", "Product"."displayName", "Product"."externalId", "Product"."deletedAt"
+      SELECT "Product"."id", "Product"."displayName", "Product"."image", "Product"."externalId", "Product"."deletedAt"
       FROM "Product"
       WHERE "Product"."searchvector" @@ to_tsquery('spanish', ${searchQuery})
       ORDER BY ts_rank("Product"."searchvector", to_tsquery('spanish', ${searchQuery})) DESC

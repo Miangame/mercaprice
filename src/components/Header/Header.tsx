@@ -1,10 +1,19 @@
-import { ChangeEvent, useState } from 'react'
 import { useRouter } from 'next/router'
+import { ChangeEvent, useState } from 'react'
 
 import { useDebounce } from '@/hooks/useDebounce'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import {
+  InputWrapper,
+  StyledImg,
+  StyledInput,
+  StyledSearchIcon,
+  Wrapper
+} from './Header.styled'
 
 export const Header = () => {
   const router = useRouter()
+  const isMobile = useIsMobile()
 
   const [searchText, setSearchText] = useState('')
 
@@ -29,11 +38,27 @@ export const Header = () => {
   }
 
   return (
-    <input
-      type="text"
-      value={searchText}
-      placeholder="Search..."
-      onChange={handleChange}
-    />
+    <Wrapper>
+      <StyledImg
+        src={
+          isMobile === undefined
+            ? ''
+            : isMobile
+              ? '/img/singleLogo.webp'
+              : '/img/logo.webp'
+        }
+        $isHide={isMobile === undefined}
+        alt="Logo"
+      />
+      <InputWrapper>
+        <StyledSearchIcon />
+        <StyledInput
+          type="text"
+          value={searchText}
+          placeholder="Buscar productos"
+          onChange={handleChange}
+        />
+      </InputWrapper>
+    </Wrapper>
   )
 }

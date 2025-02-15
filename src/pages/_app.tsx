@@ -9,6 +9,7 @@ import { Header } from '../components/Header/Header'
 import { Footer } from '../components/Footer/Footer'
 
 import { theme } from '@/theme/theme'
+import { Layout } from '@/components/Layout/Layout'
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -18,7 +19,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <GlobalStyles />
 
       <Header />
-      <Component {...pageProps} />
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
       <Footer />
 
       <Analytics />
