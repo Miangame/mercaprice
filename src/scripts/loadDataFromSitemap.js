@@ -170,7 +170,8 @@ const readSitemap = async (urlOrPath) => {
               data: {
                 externalId: product.id,
                 displayName: product.display_name,
-                image: image || ''
+                image: image || '',
+                referenceFormat: product.price_instructions.reference_format
               }
             })
 
@@ -194,6 +195,21 @@ const readSitemap = async (urlOrPath) => {
             })
 
             console.log('🔄 Product image updated:', product.display_name)
+          } else if (
+            product.price_instructions.reference_format !==
+            existProductInDB.referenceFormat
+          ) {
+            existProductInDB = await prisma.product.update({
+              where: { id: existProductInDB.id },
+              data: {
+                referenceFormat: product.price_instructions.reference_format
+              }
+            })
+
+            console.log(
+              '🔄 Product reference format updated:',
+              product.display_name
+            )
           }
 
           const currentUnitPrice = parseFloat(

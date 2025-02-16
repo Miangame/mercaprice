@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Product {
-  id           String                  @id @default(uuid()) @db.Uuid
-  externalId   String                  @unique
-  displayName  String
-  priceHistory PriceHistory[]
-  deletedAt    DateTime?
-  searchvector Unsupported("tsvector")
-  image        String?
+  id              String                  @id @default(uuid()) @db.Uuid
+  externalId      String                  @unique
+  displayName     String
+  priceHistory    PriceHistory[]
+  deletedAt       DateTime?
+  searchvector    Unsupported("tsvector")
+  image           String?
+  referenceFormat String?
 }
 
 model PriceHistory {
