@@ -10,6 +10,7 @@ import { Footer } from '../components/Footer/Footer'
 
 import { theme } from '@/theme/theme'
 import { Layout } from '@/components/Layout/Layout'
+import { LayoutContainer } from '@/components/LayoutContainer/LayoutContainer'
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -18,11 +19,13 @@ export default function App({ Component, pageProps }: AppProps) {
       <ResetCSS />
       <GlobalStyles />
 
-      <Header />
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
-      <Footer />
+      <LayoutContainer>
+        <Header />
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+        <Footer />
+      </LayoutContainer>
 
       <Analytics />
     </ThemeProvider>

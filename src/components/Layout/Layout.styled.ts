@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 
 export const Wrapper = styled.div(({ theme: { size } }) => ({
-  padding: size.units(2)
+  padding: size.units(2),
+  flex: 1
 }))

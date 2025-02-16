@@ -13,6 +13,7 @@ declare module 'styled-components' {
       borderLightGray: string
       backgroundGray: string
       textLight: string
+      white: string
     }
     transition: {
       standard: (firstProperty?: string, ...restProperties: string[]) => string

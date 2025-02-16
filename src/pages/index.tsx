@@ -9,6 +9,7 @@ import {
 } from '@/components/HomePage/HomePage.styled'
 import { ProductCard } from '@/components/HomePage/components/ProductCard/ProductCard'
 import { ProductWithPrice } from '@/types/ProductWithPrice'
+import { ErrorComponent } from '@/components/ErrorComponent/ErrorComponent'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -21,7 +22,7 @@ export default function Home() {
   const { data, error, isLoading } = useSWR<ProductWithPrice[]>(url, fetcher)
 
   if (isLoading) return <Loader />
-  if (error) return <p>Hubo un error al cargar los resultados.</p>
+  if (error) return <ErrorComponent />
 
   return (
     <Wrapper>
