@@ -11,7 +11,7 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const limit = Number(req.query.limit) || 10
+  const limit = Number(req.query.limit) || 20
   const maxLimit = 50
   const finalLimit = Math.min(limit, maxLimit)
 
