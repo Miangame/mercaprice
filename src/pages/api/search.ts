@@ -32,6 +32,7 @@ export default async function handler(
         "p"."image", 
         "p"."externalId", 
         "p"."deletedAt",
+        "p"."referenceFormat",
         "ph"."unitPrice",
         "ph"."bulkPrice"
       FROM "Product" AS "p"
