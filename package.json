@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "prepare": "husky",
-    "loadDataFromSitemap": "node src/scripts/loadDataFromSitemap.js"
+    "loadDataFromSitemap": "node src/scripts/loadDataFromSitemap.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
