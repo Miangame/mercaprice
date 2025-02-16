@@ -42,7 +42,7 @@ export const Header = () => {
       <StyledImg
         src={
           isMobile === undefined
-            ? ''
+            ? undefined
             : isMobile
               ? '/img/singleLogo.webp'
               : '/img/logo.webp'

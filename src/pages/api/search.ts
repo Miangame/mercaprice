@@ -26,10 +26,23 @@ export default async function handler(
       .join(' & ')
 
     const products = await prisma.$queryRaw`
-      SELECT "Product"."id", "Product"."displayName", "Product"."image", "Product"."externalId", "Product"."deletedAt"
-      FROM "Product"
-      WHERE "Product"."searchvector" @@ to_tsquery('spanish', ${searchQuery})
-      ORDER BY ts_rank("Product"."searchvector", to_tsquery('spanish', ${searchQuery})) DESC
+      SELECT 
+        "p"."id", 
+        "p"."displayName", 
+        "p"."image", 
+        "p"."externalId", 
+        "p"."deletedAt",
+        "ph"."unitPrice",
+        "ph"."bulkPrice"
+      FROM "Product" AS "p"
+      LEFT JOIN (
+        SELECT DISTINCT ON ("productId") "productId", "unitPrice", "bulkPrice"
+        FROM "PriceHistory"
+        ORDER BY "productId", "recordedAt" DESC
+      ) AS "ph" ON "p"."id" = "ph"."productId"
+      WHERE "p"."searchvector" @@ to_tsquery('spanish', ${searchQuery})
+      AND "p"."deletedAt" IS NULL
+      ORDER BY ts_rank("p"."searchvector", to_tsquery('spanish', ${searchQuery})) DESC;
     `
 
     return res.status(200).json(products)

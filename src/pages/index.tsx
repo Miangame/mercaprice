@@ -1,42 +1,37 @@
 import { useRouter } from 'next/router'
 import useSWR from 'swr'
 
+import { Loader } from '@/components/Loader/Loader'
+import {
+  Title,
+  ProductsWrapper,
+  Wrapper
+} from '@/components/HomePage/HomePage.styled'
+import { ProductCard } from '@/components/HomePage/components/ProductCard/ProductCard'
+import { ProductWithPrice } from '@/types/ProductWithPrice'
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function Home() {
   const router = useRouter()
   const { search } = router.query
 
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading } = useSWR<ProductWithPrice[]>(
     search ? `/api/search?query=${search}` : null,
     fetcher
   )
 
-  if (isLoading) return <p>Cargando...</p>
+  if (isLoading) return <Loader />
   if (error) return <p>Hubo un error al cargar los resultados.</p>
 
   return (
-    <>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1rem',
-          marginTop: '1rem'
-        }}
-      >
-        {data?.map((result: any) => (
-          <div key={result.id}>
-            <img
-              src={result.image}
-              alt={result.title}
-              style={{ width: '100%' }}
-            />
-            <h2>{result.title}</h2>
-            <p>{result.overview}</p>
-          </div>
-        ))}
-      </div>
-    </>
+    <Wrapper>
+      <Title>
+        {search ? `Resultados de búsqueda para: '${search}'` : 'Productos'}
+      </Title>
+      <ProductsWrapper>
+        {data?.map((item) => <ProductCard key={item.id} item={item} />)}
+      </ProductsWrapper>
+    </Wrapper>
   )
 }
