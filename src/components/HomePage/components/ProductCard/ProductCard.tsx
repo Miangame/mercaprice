@@ -15,7 +15,7 @@ export const ProductCard = ({ item }: ProductCardProps) => {
       )}
       <Name>{item.displayName}</Name>
       <Price>
-        {item.unitPrice}€<span>/ud</span>
+        {item.unitPrice.toFixed(2)}€<span>/ud</span>
       </Price>
     </Wrapper>
   )

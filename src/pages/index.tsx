@@ -16,10 +16,9 @@ export default function Home() {
   const router = useRouter()
   const { search } = router.query
 
-  const { data, error, isLoading } = useSWR<ProductWithPrice[]>(
-    search ? `/api/search?query=${search}` : null,
-    fetcher
-  )
+  const url = search ? `/api/search?query=${search}` : '/api/randomProducts'
+
+  const { data, error, isLoading } = useSWR<ProductWithPrice[]>(url, fetcher)
 
   if (isLoading) return <Loader />
   if (error) return <p>Hubo un error al cargar los resultados.</p>
