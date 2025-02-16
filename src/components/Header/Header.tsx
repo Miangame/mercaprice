@@ -15,7 +15,7 @@ export const Header = () => {
   const router = useRouter()
   const isMobile = useIsMobile()
 
-  const [searchText, setSearchText] = useState('')
+  const [searchText, setSearchText] = useState<string | undefined>(undefined)
 
   const commitChanges = (value: string) => {
     router.push(
@@ -37,9 +37,16 @@ export const Header = () => {
     debounceCommitChanges(text)
   }
 
+  const handleImageClick = () => {
+    router.push('/')
+
+    setSearchText('')
+  }
+
   return (
     <Wrapper>
       <StyledImg
+        onClick={handleImageClick}
         src={
           isMobile === undefined
             ? undefined

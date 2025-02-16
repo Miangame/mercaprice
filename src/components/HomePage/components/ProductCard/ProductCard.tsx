@@ -3,11 +3,12 @@ import { FakeImg, Name, Price, StyledImg, Wrapper } from './ProductCard.styled'
 
 interface ProductCardProps {
   item: ProductWithPrice
+  onClick: () => void
 }
 
-export const ProductCard = ({ item }: ProductCardProps) => {
+export const ProductCard = ({ item, onClick }: ProductCardProps) => {
   return (
-    <Wrapper>
+    <Wrapper onClick={onClick}>
       {item.image ? (
         <StyledImg src={item.image} alt={item.displayName} />
       ) : (

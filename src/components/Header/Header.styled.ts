@@ -27,6 +27,7 @@ export const Wrapper = styled.header`
 export const StyledImg = styled.img<{ $isHide: boolean }>`
   width: ${({ theme: { size } }) => size.units(6)};
   opacity: ${({ $isHide }) => ($isHide ? 0 : 1)};
+  cursor: pointer;
 
   ${media.greaterThan('md')`
     width: ${({ theme: { size } }: DefaultTheme) => size.units(30)};
