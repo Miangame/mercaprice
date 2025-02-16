@@ -19,7 +19,7 @@ export default async function handler(
   try {
     const priceHistory = await prisma.priceHistory.findMany({
       where: { productId: id },
-      orderBy: { recordedAt: 'desc' }
+      orderBy: { recordedAt: 'asc' }
     })
 
     if (!priceHistory.length) {
