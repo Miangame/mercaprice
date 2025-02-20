@@ -2,9 +2,8 @@ import { PriceHistory } from '@prisma/client'
 import { useRouter } from 'next/router'
 import { useCallback, useEffect } from 'react'
 import useSWR from 'swr'
+import { GetServerSideProps } from 'next'
 
-import { ErrorComponent } from '@/components/ErrorComponent/ErrorComponent'
-import { Loader } from '@/components/Loader/Loader'
 import { PricesChart } from '@/components/ProductPage/components/PricesChart/PricesChart'
 import {
   FakeImage,
@@ -19,24 +18,19 @@ import {
 import { OriginalProduct } from '@/types/OriginalProduct'
 import { ProductWithPrice } from '@/types/ProductWithPrice'
 
+interface ProductPageProps {
+  product: ProductWithPrice
+  priceHistory: PriceHistory[]
+}
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const ProductPage = () => {
+const ProductPage = ({ product, priceHistory }: ProductPageProps) => {
   const { query } = useRouter()
   const { id } = query
 
-  const { data, isLoading, error } = useSWR<ProductWithPrice>(
-    id ? `/api/product/${id}` : undefined,
-    fetcher
-  )
-
   const { data: originalData } = useSWR<OriginalProduct>(
-    id && data ? `/api/proxy/${data?.externalId}` : undefined,
-    fetcher
-  )
-
-  const { data: priceHistory } = useSWR<PriceHistory[]>(
-    id && data ? `/api/prices/${data?.id}` : undefined,
+    id && product ? `/api/proxy/${product?.externalId}` : undefined,
     fetcher
   )
 
@@ -44,7 +38,7 @@ const ProductPage = () => {
     const response = await fetch('/api/update-product', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data, originalData })
+      body: JSON.stringify({ product, originalData })
     })
 
     if (!response.ok) {
@@ -52,7 +46,7 @@ const ProductPage = () => {
     } else {
       console.log('✅ Product updated')
     }
-  }, [data, originalData])
+  }, [product, originalData])
 
   useEffect(() => {
     const currentUnitPrice = parseFloat(
@@ -64,35 +58,35 @@ const ProductPage = () => {
 
     if (
       originalData &&
-      data &&
-      (originalData.display_name !== data.displayName ||
+      product &&
+      (originalData.display_name !== product.displayName ||
         (originalData.photos[0] &&
           originalData.photos[0].regular &&
-          originalData.photos[0].regular !== data.image) ||
-        data.unitPrice !== currentUnitPrice ||
-        data.bulkPrice !== currentBulkPrice)
+          originalData.photos[0].regular !== product.image) ||
+        product.unitPrice !== currentUnitPrice ||
+        product.bulkPrice !== currentBulkPrice)
     ) {
       updateProduct()
     }
-  }, [data, originalData, updateProduct])
+  }, [product, originalData, updateProduct])
 
-  if (error) return <ErrorComponent />
-  if (isLoading || !id) return <Loader />
+  // if (error) return <ErrorComponent />
+  // if (isLoading || !id) return <Loader />
 
   return (
     <Wrapper>
-      {data?.image ? (
-        <StyledImage src={data.image} alt={data?.displayName} />
+      {product?.image ? (
+        <StyledImage src={product.image} alt={product?.displayName} />
       ) : (
         <FakeImage />
       )}
-      <Title>{data?.displayName}</Title>
+      <Title>{product?.displayName}</Title>
       <PricesWrapper>
         <Price>
-          {data?.unitPrice}€<span>/unidad</span>
+          {product?.unitPrice}€<span>/unidad</span>
         </Price>
         <SecondPrice>
-          {data?.bulkPrice}€<span>/{data?.referenceFormat}</span>
+          {product?.bulkPrice}€<span>/{product?.referenceFormat}</span>
         </SecondPrice>
       </PricesWrapper>
       <PricesHistoryWrapper>
@@ -113,6 +107,37 @@ const ProductPage = () => {
       </PricesHistoryWrapper>
     </Wrapper>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const productId = params?.id
+  if (!productId) return { notFound: true }
+
+  try {
+    const [productRes, pricesRes] = await Promise.all([
+      fetch(`${process.env.API_URL}/api/product/${productId}`),
+      fetch(`${process.env.API_URL}/api/prices/${productId}`)
+    ])
+
+    const [product, prices] = await Promise.all([
+      productRes.json(),
+      pricesRes.json()
+    ])
+
+    if (!product || product.error) {
+      return { notFound: true }
+    }
+
+    return {
+      props: {
+        product,
+        priceHistory: prices
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching product data:', error)
+    return { notFound: true }
+  }
 }
 
 export default ProductPage

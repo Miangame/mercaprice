@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router'
 import useSWR from 'swr'
+import { GetServerSideProps } from 'next'
 
 import { ErrorComponent } from '@/components/ErrorComponent/ErrorComponent'
 import {
@@ -11,16 +12,21 @@ import { ProductCard } from '@/components/HomePage/components/ProductCard/Produc
 import { Loader } from '@/components/Loader/Loader'
 import { ProductWithPrice } from '@/types/ProductWithPrice'
 
+interface HomeProps {
+  initialData: ProductWithPrice[]
+}
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const Home = () => {
+const Home = ({ initialData }: HomeProps) => {
   const router = useRouter()
 
   const { search } = router.query
 
-  const url = search ? `/api/search?query=${search}` : '/api/randomProducts'
-
-  const { data, error, isLoading } = useSWR<ProductWithPrice[]>(url, fetcher)
+  const { data, error, isLoading } = useSWR<ProductWithPrice[]>(
+    search ? `/api/search?query=${search}` : null,
+    fetcher
+  )
 
   const handleClickItem = (itemId: string) => () => {
     router.push(`/product/${itemId}`)
@@ -35,7 +41,7 @@ const Home = () => {
         {search ? `Resultados de búsqueda para: '${search}'` : 'Productos'}
       </Title>
       <ProductsWrapper>
-        {data?.map((item) => (
+        {(search ? data : initialData)?.map((item) => (
           <ProductCard
             key={item.id}
             item={item}
@@ -45,6 +51,24 @@ const Home = () => {
       </ProductsWrapper>
     </Wrapper>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const res = await fetch(`${process.env.API_URL}/api/randomProducts`)
+    if (!res.ok) throw new Error('Failed to fetch random products')
+
+    const data = await res.json()
+
+    return {
+      props: { initialData: data }
+    }
+  } catch (error) {
+    console.error('Error fetching random products:', error)
+    return {
+      props: { initialData: [] }
+    }
+  }
 }
 
 export default Home
