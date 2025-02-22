@@ -15,7 +15,7 @@ export const Header = () => {
   const router = useRouter()
   const isMobile = useIsMobile()
 
-  const [searchText, setSearchText] = useState<string | undefined>(undefined)
+  const [searchText, setSearchText] = useState<string>('')
 
   const commitChanges = (value: string) => {
     router.push(
