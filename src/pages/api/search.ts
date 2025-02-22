@@ -45,7 +45,10 @@ export default async function handler(
         FROM "PriceHistory"
         ORDER BY "productId", "recordedAt" DESC
       ) AS "ph" ON "p"."id" = "ph"."productId"
-      WHERE "p"."searchvector" @@ to_tsquery('spanish', ${searchQuery})
+      WHERE (
+        "p"."searchvector" @@ websearch_to_tsquery('spanish', ${searchQuery})
+        OR "p"."displayName" ILIKE ${'%' + searchQuery + '%'}
+      )
       AND "p"."deletedAt" IS NULL
       ORDER BY ts_rank("p"."searchvector", to_tsquery('spanish', ${searchQuery})) DESC
       LIMIT ${itemsPerPage}
