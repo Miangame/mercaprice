@@ -70,9 +70,6 @@ const ProductPage = ({ product, priceHistory }: ProductPageProps) => {
     }
   }, [product, originalData, updateProduct])
 
-  // if (error) return <ErrorComponent />
-  // if (isLoading || !id) return <Loader />
-
   return (
     <Wrapper>
       {product?.image ? (
