@@ -6,31 +6,48 @@ import { GetServerSideProps } from 'next'
 
 import { PricesChart } from '@/components/ProductPage/components/PricesChart/PricesChart'
 import {
+  ChartWrapper,
   FakeImage,
+  LeftColumn,
+  NutritionalInfoWrapper,
   Price,
   PricesHistoryWrapper,
   PricesWrapper,
-  SecondPrice,
   StyledImage,
+  Subtitle,
   Title,
+  ColumnsWrapper,
   Wrapper
 } from '@/components/ProductPage/ProductPage.styled'
 import { OriginalProduct } from '@/types/OriginalProduct'
 import { ProductWithPrice } from '@/types/ProductWithPrice'
+import { OpenFoodFactsResponse } from '@/types/OpenFoodFactsResponse'
 
 interface ProductPageProps {
   product: ProductWithPrice
-  priceHistory: PriceHistory[]
+  priceHistoryUnitPrices: { recordedAt: string; price: number }[]
+  priceHistoryBulkPrices: { recordedAt: string; price: number }[]
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const ProductPage = ({ product, priceHistory }: ProductPageProps) => {
+const ProductPage = ({
+  product,
+  priceHistoryUnitPrices,
+  priceHistoryBulkPrices
+}: ProductPageProps) => {
   const { query } = useRouter()
   const { id } = query
 
   const { data: originalData } = useSWR<OriginalProduct>(
     id && product ? `/api/proxy/${product?.externalId}` : undefined,
+    fetcher
+  )
+
+  const { data: nutritionalInfo } = useSWR<OpenFoodFactsResponse>(
+    originalData && originalData?.ean
+      ? `https://world.openfoodfacts.org/api/v2/product/${originalData.ean}.json`
+      : undefined,
     fetcher
   )
 
@@ -72,36 +89,103 @@ const ProductPage = ({ product, priceHistory }: ProductPageProps) => {
 
   return (
     <Wrapper>
-      {product?.image ? (
-        <StyledImage src={product.image} alt={product?.displayName} />
-      ) : (
-        <FakeImage />
-      )}
       <Title>{product?.displayName}</Title>
-      <PricesWrapper>
-        <Price>
-          {product?.unitPrice}€<span>/unidad</span>
-        </Price>
-        <SecondPrice>
-          {product?.bulkPrice}€<span>/{product?.referenceFormat}</span>
-        </SecondPrice>
-      </PricesWrapper>
-      <PricesHistoryWrapper>
-        {priceHistory ? (
-          <>
-            <PricesChart
-              title="Histórico de precios por unidad"
-              priceHistory={priceHistory}
-            />
-            <PricesChart
-              title="Histórico de precios al por mayor"
-              priceHistory={priceHistory}
-            />
-          </>
-        ) : (
-          <p>No hay historial de precios disponible.</p>
-        )}
-      </PricesHistoryWrapper>
+      <ColumnsWrapper>
+        <LeftColumn>
+          {product?.image ? (
+            <StyledImage src={product.image} alt={product?.displayName} />
+          ) : (
+            <FakeImage />
+          )}
+
+          <PricesWrapper>
+            <Subtitle>Información de precios</Subtitle>
+            <Price>
+              Precio unitario: <span>{product?.unitPrice}€</span>
+            </Price>
+            <Price>
+              Precio por volumen: <span>{product?.bulkPrice}€</span> (
+              {product?.referenceFormat})
+            </Price>
+          </PricesWrapper>
+
+          <NutritionalInfoWrapper>
+            <Subtitle>Información nutricional</Subtitle>
+            {nutritionalInfo?.status !== 0 ? (
+              <>
+                <p>
+                  Energía:{' '}
+                  <span>
+                    {`${nutritionalInfo?.product.nutriments['energy_100g']} kJ | ${nutritionalInfo?.product.nutriments['energy-kcal_100g']} ${nutritionalInfo?.product.nutriments['energy-kcal_unit']}`}
+                  </span>
+                </p>
+                <p>
+                  Grasas:{' '}
+                  <span>
+                    {`${nutritionalInfo?.product.nutriments.fat_100g} ${nutritionalInfo?.product.nutriments.fat_unit}`}
+                  </span>
+                </p>
+                <p>
+                  Grasas saturadas:{' '}
+                  <span>
+                    {`${nutritionalInfo?.product.nutriments['saturated-fat_100g']} ${nutritionalInfo?.product.nutriments['saturated-fat_unit']}`}
+                  </span>
+                </p>
+                <p>
+                  Carbohidratos:{' '}
+                  <span>
+                    {`${nutritionalInfo?.product.nutriments.carbohydrates_100g} ${nutritionalInfo?.product.nutriments.carbohydrates_unit}`}
+                  </span>
+                </p>
+                <p>
+                  Azúcares:{' '}
+                  <span>
+                    {`${nutritionalInfo?.product.nutriments.sugars_100g} ${nutritionalInfo?.product.nutriments.sugars_unit}`}
+                  </span>
+                </p>
+                <p>
+                  Proteínas:{' '}
+                  <span>
+                    {`${nutritionalInfo?.product.nutriments.proteins_100g} ${nutritionalInfo?.product.nutriments.proteins_unit}`}
+                  </span>
+                </p>
+                <p>
+                  Sal:{' '}
+                  <span>
+                    {`${nutritionalInfo?.product.nutriments.salt_100g} ${nutritionalInfo?.product.nutriments.salt_unit}`}
+                  </span>
+                </p>
+              </>
+            ) : (
+              <p>No hay información nutricional disponible.</p>
+            )}
+          </NutritionalInfoWrapper>
+        </LeftColumn>
+
+        <PricesHistoryWrapper>
+          <ChartWrapper>
+            {priceHistoryUnitPrices ? (
+              <PricesChart
+                title="Histórico de precios por unidad"
+                priceHistory={priceHistoryUnitPrices}
+              />
+            ) : (
+              <p>No hay historial de precios por unidad disponible.</p>
+            )}
+          </ChartWrapper>
+
+          <ChartWrapper>
+            {priceHistoryBulkPrices ? (
+              <PricesChart
+                title="Histórico de precios por volumen"
+                priceHistory={priceHistoryBulkPrices}
+              />
+            ) : (
+              <p>No hay historial de precios por volumen disponible.</p>
+            )}
+          </ChartWrapper>
+        </PricesHistoryWrapper>
+      </ColumnsWrapper>
     </Wrapper>
   )
 }
@@ -128,7 +212,14 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
     return {
       props: {
         product,
-        priceHistory: prices
+        priceHistoryUnitPrices: prices.map((price: PriceHistory) => ({
+          recordedAt: price.recordedAt,
+          price: price.unitPrice
+        })),
+        priceHistoryBulkPrices: prices.map((price: PriceHistory) => ({
+          recordedAt: price.recordedAt,
+          price: price.bulkPrice
+        }))
       }
     }
   } catch (error) {

@@ -1,11 +1,10 @@
-import { PriceHistory } from '@prisma/client'
 import {
-  LineChart,
   Line,
-  XAxis,
-  YAxis,
+  LineChart,
+  ResponsiveContainer,
   Tooltip,
-  ResponsiveContainer
+  XAxis,
+  YAxis
 } from 'recharts'
 import { useTheme } from 'styled-components'
 
@@ -13,7 +12,10 @@ import { Title, Wrapper } from './PricesChart.styled'
 
 interface PricesChartProps {
   title: string
-  priceHistory: PriceHistory[]
+  priceHistory: {
+    recordedAt: string
+    price: number
+  }[]
 }
 
 export const PricesChart = ({ title, priceHistory }: PricesChartProps) => {
@@ -25,7 +27,7 @@ export const PricesChart = ({ title, priceHistory }: PricesChartProps) => {
       month: '2-digit',
       day: 'numeric'
     }),
-    Precio: entry.unitPrice
+    Precio: entry.price
   }))
 
   return (
