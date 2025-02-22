@@ -18,10 +18,12 @@ const Home = () => {
 
   const { search } = router.query
 
+  const searchQuery = search ? search.toString().trim() : ''
+
   const getKey = (pageIndex: number, previousPageData: any) => {
     if (previousPageData && !previousPageData.hasMore) return null
-    return search
-      ? `/api/search?query=${search}&page=${pageIndex + 1}`
+    return searchQuery
+      ? `/api/search?query=${searchQuery}&page=${pageIndex + 1}`
       : `/api/randomProducts?page=${pageIndex + 1}`
   }
 
@@ -52,7 +54,9 @@ const Home = () => {
   return (
     <Wrapper>
       <Title>
-        {search ? `Resultados de búsqueda para: '${search}'` : 'Productos'}
+        {searchQuery
+          ? `Resultados de búsqueda para: '${searchQuery}'`
+          : 'Productos'}
       </Title>
       <ProductsWrapper>
         {products?.map((item) => (

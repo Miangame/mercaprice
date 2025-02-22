@@ -25,6 +25,7 @@ export default async function handler(
 
   try {
     const searchQuery = query
+      .trim()
       .replace(/[^a-zA-Z0-9 ]/g, '')
       .split(' ')
       .join(' & ')
