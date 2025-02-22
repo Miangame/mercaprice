@@ -1,38 +1,52 @@
 import { useRouter } from 'next/router'
-import useSWR from 'swr'
-import { GetServerSideProps } from 'next'
+import useSWRInfinite from 'swr/infinite'
 
 import { ErrorComponent } from '@/components/ErrorComponent/ErrorComponent'
 import {
+  LoadMoreButton,
   ProductsWrapper,
   Title,
   Wrapper
 } from '@/components/HomePage/HomePage.styled'
 import { ProductCard } from '@/components/HomePage/components/ProductCard/ProductCard'
 import { Loader } from '@/components/Loader/Loader'
-import { ProductWithPrice } from '@/types/ProductWithPrice'
-
-interface HomeProps {
-  initialData: ProductWithPrice[]
-}
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const Home = ({ initialData }: HomeProps) => {
+const Home = () => {
   const router = useRouter()
 
   const { search } = router.query
 
-  const { data, error, isLoading } = useSWR<ProductWithPrice[]>(
-    search ? `/api/search?query=${search}` : null,
-    fetcher
+  const getKey = (pageIndex: number, previousPageData: any) => {
+    if (previousPageData && !previousPageData.hasMore) return null
+    return search
+      ? `/api/search?query=${search}&page=${pageIndex + 1}`
+      : `/api/randomProducts?page=${pageIndex + 1}`
+  }
+
+  const { data, size, setSize, isValidating, error } = useSWRInfinite(
+    getKey,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      revalidateFirstPage: false
+    }
   )
+
+  const products = data ? data.flatMap((page) => page.products) : []
+
+  const hasMore = data ? data[data.length - 1]?.hasMore : true
 
   const handleClickItem = (itemId: string) => () => {
     router.push(`/product/${itemId}`)
   }
 
-  if (isLoading) return <Loader />
+  const handleLoadMore = () => {
+    setSize(size + 1)
+  }
+
   if (error) return <ErrorComponent />
 
   return (
@@ -41,7 +55,7 @@ const Home = ({ initialData }: HomeProps) => {
         {search ? `Resultados de búsqueda para: '${search}'` : 'Productos'}
       </Title>
       <ProductsWrapper>
-        {(search ? data : initialData)?.map((item) => (
+        {products?.map((item) => (
           <ProductCard
             key={item.id}
             item={item}
@@ -49,26 +63,14 @@ const Home = ({ initialData }: HomeProps) => {
           />
         ))}
       </ProductsWrapper>
+      {hasMore && !isValidating && (
+        <LoadMoreButton onClick={handleLoadMore} disabled={isValidating}>
+          Cargar más
+        </LoadMoreButton>
+      )}
+      {isValidating && <Loader />}
     </Wrapper>
   )
-}
-
-export const getServerSideProps: GetServerSideProps = async () => {
-  try {
-    const res = await fetch(`${process.env.API_URL}/api/randomProducts`)
-    if (!res.ok) throw new Error('Failed to fetch random products')
-
-    const data = await res.json()
-
-    return {
-      props: { initialData: data }
-    }
-  } catch (error) {
-    console.error('Error fetching random products:', error)
-    return {
-      props: { initialData: [] }
-    }
-  }
 }
 
 export default Home

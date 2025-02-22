@@ -39,3 +39,19 @@ export const Title = styled.h2`
     font-size: ${({ theme }: DefaultTheme) => theme.size.units(4)};
   `}
 `
+
+export const LoadMoreButton = styled.button`
+  background-color: ${({ theme }) => theme.colors.primary};
+  border: none;
+  border-radius: 4px;
+  color: ${({ theme }) => theme.colors.white};
+  cursor: pointer;
+  font-size: ${({ theme }) => theme.size.units(2)};
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primaryDark};
+  }
+`
