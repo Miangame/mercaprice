@@ -59,6 +59,27 @@ export const Price = styled.p`
   }
 `
 
+export const StyledButton = styled.a`
+  width: fit-content;
+  padding: ${({ theme }) => theme.size.units(1.5)};
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.white};
+  border: none;
+  border-radius: ${({ theme }) => theme.size.units(1)};
+  font-size: ${({ theme }) => theme.size.units(2)};
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: ${({ theme }) => theme.size.units(1)};
+  text-decoration: none;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primaryDark};
+  }
+`
+
 export const PricesHistoryWrapper = styled.div`
   width: 100%;
   display: flex;

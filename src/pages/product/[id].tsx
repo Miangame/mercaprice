@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useCallback, useEffect } from 'react'
 import useSWR from 'swr'
 import { GetServerSideProps } from 'next'
+import { FaExternalLinkAlt } from 'react-icons/fa'
 
 import { PricesChart } from '@/components/ProductPage/components/PricesChart/PricesChart'
 import {
@@ -17,7 +18,8 @@ import {
   Subtitle,
   Title,
   ColumnsWrapper,
-  Wrapper
+  Wrapper,
+  StyledButton
 } from '@/components/ProductPage/ProductPage.styled'
 import { OriginalProduct } from '@/types/OriginalProduct'
 import { ProductWithPrice } from '@/types/ProductWithPrice'
@@ -107,6 +109,15 @@ const ProductPage = ({
               Precio por volumen: <span>{product?.bulkPrice}€</span> (
               {product?.referenceFormat})
             </Price>
+
+            <StyledButton
+              href={originalData?.share_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ver en tienda
+              <FaExternalLinkAlt />
+            </StyledButton>
           </PricesWrapper>
 
           <NutritionalInfoWrapper>
