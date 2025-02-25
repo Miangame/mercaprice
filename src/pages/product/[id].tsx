@@ -14,16 +14,17 @@ import {
   Price,
   PricesHistoryWrapper,
   PricesWrapper,
-  StyledImage,
   Subtitle,
   Title,
   ColumnsWrapper,
   Wrapper,
-  StyledButton
+  StyledButton,
+  CarouselWrapper
 } from '@/components/ProductPage/ProductPage.styled'
 import { OriginalProduct } from '@/types/OriginalProduct'
 import { ProductWithPrice } from '@/types/ProductWithPrice'
 import { OpenFoodFactsResponse } from '@/types/OpenFoodFactsResponse'
+import { ProductImagesCarousel } from '@/components/ProductPage/components/ProductImagesCarousel/ProductImagesCarousel'
 
 interface ProductPageProps {
   product: ProductWithPrice
@@ -94,11 +95,15 @@ const ProductPage = ({
       <Title>{product?.displayName}</Title>
       <ColumnsWrapper>
         <LeftColumn>
-          {product?.image ? (
-            <StyledImage src={product.image} alt={product?.displayName} />
-          ) : (
-            <FakeImage />
-          )}
+          <CarouselWrapper>
+            {originalData?.photos ? (
+              <ProductImagesCarousel
+                images={originalData?.photos?.map((photo) => photo.regular)}
+              />
+            ) : (
+              <FakeImage />
+            )}
+          </CarouselWrapper>
 
           <PricesWrapper>
             <Subtitle>Información de precios</Subtitle>

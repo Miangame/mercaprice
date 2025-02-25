@@ -68,7 +68,7 @@ export const StyledButton = styled.a`
   border-radius: ${({ theme }) => theme.size.units(1)};
   font-size: ${({ theme }) => theme.size.units(2)};
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: ${({ theme }) => theme.transition.standard()};
   display: flex;
   justify-content: center;
   align-items: center;
@@ -143,3 +143,5 @@ export const LeftColumn = styled.div`
   flex-direction: column;
   gap: ${({ theme }) => theme.size.units(4)};
 `
+
+export const CarouselWrapper = withBox(styled.div``)
