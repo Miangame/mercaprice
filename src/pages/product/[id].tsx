@@ -54,6 +54,42 @@ const ProductPage = ({
     fetcher
   )
 
+  const filterNutriInfo =
+    nutritionalInfo?.status !== 0
+      ? [
+          {
+            label: 'Energía',
+            key: 'energy_100g',
+            unitKey: 'energy-kcal_unit',
+            extraKey: 'energy-kcal_100g'
+          },
+          { label: 'Grasas', key: 'fat_100g', unitKey: 'fat_unit' },
+          {
+            label: 'Grasas saturadas',
+            key: 'saturated-fat_100g',
+            unitKey: 'saturated-fat_unit'
+          },
+          {
+            label: 'Carbohidratos',
+            key: 'carbohydrates_100g',
+            unitKey: 'carbohydrates_unit'
+          },
+          { label: 'Azúcares', key: 'sugars_100g', unitKey: 'sugars_unit' },
+          {
+            label: 'Proteínas',
+            key: 'proteins_100g',
+            unitKey: 'proteins_unit'
+          },
+          { label: 'Sal', key: 'salt_100g', unitKey: 'salt_unit' },
+          { label: 'Alcohol', key: 'alcohol_100g', unitKey: 'alcohol_unit' }
+        ].filter(
+          ({ key }) =>
+            (nutritionalInfo?.product.nutriments as Record<string, any>)?.[
+              key
+            ] !== undefined
+        )
+      : []
+
   const updateProduct = useCallback(async () => {
     const response = await fetch('/api/update-product', {
       method: 'POST',
@@ -129,48 +165,18 @@ const ProductPage = ({
             <Subtitle>Información nutricional</Subtitle>
             {nutritionalInfo?.status !== 0 ? (
               <>
-                <p>
-                  Energía:{' '}
-                  <span>
-                    {`${nutritionalInfo?.product.nutriments['energy_100g']} kJ | ${nutritionalInfo?.product.nutriments['energy-kcal_100g']} ${nutritionalInfo?.product.nutriments['energy-kcal_unit']}`}
-                  </span>
-                </p>
-                <p>
-                  Grasas:{' '}
-                  <span>
-                    {`${nutritionalInfo?.product.nutriments.fat_100g} ${nutritionalInfo?.product.nutriments.fat_unit}`}
-                  </span>
-                </p>
-                <p>
-                  Grasas saturadas:{' '}
-                  <span>
-                    {`${nutritionalInfo?.product.nutriments['saturated-fat_100g']} ${nutritionalInfo?.product.nutriments['saturated-fat_unit']}`}
-                  </span>
-                </p>
-                <p>
-                  Carbohidratos:{' '}
-                  <span>
-                    {`${nutritionalInfo?.product.nutriments.carbohydrates_100g} ${nutritionalInfo?.product.nutriments.carbohydrates_unit}`}
-                  </span>
-                </p>
-                <p>
-                  Azúcares:{' '}
-                  <span>
-                    {`${nutritionalInfo?.product.nutriments.sugars_100g} ${nutritionalInfo?.product.nutriments.sugars_unit}`}
-                  </span>
-                </p>
-                <p>
-                  Proteínas:{' '}
-                  <span>
-                    {`${nutritionalInfo?.product.nutriments.proteins_100g} ${nutritionalInfo?.product.nutriments.proteins_unit}`}
-                  </span>
-                </p>
-                <p>
-                  Sal:{' '}
-                  <span>
-                    {`${nutritionalInfo?.product.nutriments.salt_100g} ${nutritionalInfo?.product.nutriments.salt_unit}`}
-                  </span>
-                </p>
+                {filterNutriInfo.map(({ label, key, unitKey, extraKey }) => {
+                  const nutriments = nutritionalInfo?.product
+                    .nutriments as Record<string, any>
+                  return (
+                    <p key={key}>
+                      {label}:{' '}
+                      <span>
+                        {`${nutriments[key]} ${nutriments[unitKey] ?? ''}${extraKey ? ` | ${nutriments[extraKey] ?? ''}` : ''}`}
+                      </span>
+                    </p>
+                  )
+                })}
               </>
             ) : (
               <p>No hay información nutricional disponible.</p>
