@@ -40,8 +40,8 @@ io.on('connection', (socket) => {
   socket.emit('logs', logs)
 })
 
-server.listen(3000, () =>
-  console.log('📡 Logs server in http://localhost:3000/logs')
+server.listen(3001, () =>
+  console.log('📡 Logs server in http://localhost:3001/logs')
 )
 
 const saveToErrorLog = async (message) => {
