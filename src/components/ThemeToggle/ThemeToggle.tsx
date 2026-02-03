@@ -52,6 +52,7 @@ export const ThemeToggle = () => {
       animate={{ rotate: theme === 'dark' ? 180 : 0 }}
       transition={{ duration: 0.3 }}
       aria-label="Toggle theme"
+      {...({} as any)}
     >
       {theme === 'dark' ? <FiSun size={24} /> : <FiMoon size={24} />}
     </ToggleButton>

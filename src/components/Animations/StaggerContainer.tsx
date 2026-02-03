@@ -23,13 +23,14 @@ export const StaggerContainer = ({
   }
 
   return (
-    <motion.div
-      className={className}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {children}
-    </motion.div>
+    <div className={className}>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {children}
+      </motion.div>
+    </div>
   )
 }

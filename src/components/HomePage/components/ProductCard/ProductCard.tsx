@@ -60,6 +60,7 @@ export const ProductCard = ({ item, onClick, index = 0 }: ProductCardProps) => {
         boxShadow: '0 16px 48px rgba(34, 158, 107, 0.24)'
       }}
       whileTap={{ scale: 0.98 }}
+      {...({} as any)}
     >
       <ImageWrapper>
         {item.image ? (
@@ -75,6 +76,7 @@ export const ProductCard = ({ item, onClick, index = 0 }: ProductCardProps) => {
               rotate: [0, -1, 1, 0],
               transition: { duration: 0.3 }
             }}
+            {...({} as any)}
           />
         ) : (
           <FakeImg />

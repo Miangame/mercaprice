@@ -102,6 +102,7 @@ export const AnimatedButton = ({
           : {}
       }
       whileTap={!disabled && !loading ? { scale: 0.98 } : {}}
+      {...({} as any)}
     >
       {loading ? <LoadingSpinner /> : children}
     </StyledButton>

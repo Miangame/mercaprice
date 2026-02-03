@@ -78,12 +78,14 @@ export const ProductImagesCarousel = ({
             whileHover={{ scale: isZoomed ? 1 : 1.05 }}
             onClick={() => setIsZoomed(!isZoomed)}
             style={{ cursor: isZoomed ? 'zoom-out' : 'zoom-in' }}
+            {...({} as any)}
           >
             <motion.img
               src={image}
               alt={`Product image ${index + 1}`}
               animate={{ scale: isZoomed ? 1.5 : 1 }}
               transition={{ duration: 0.3 }}
+              {...({} as any)}
             />
           </motion.div>
         ))}

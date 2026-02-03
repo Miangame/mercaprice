@@ -43,38 +43,40 @@ export const Footer = () => {
         whileInView="visible"
         viewport={{ once: true }}
       >
-        <motion.a
+        <a
           href="https://github.com/Miangame/mercaprice"
           target="_blank"
           rel="noopener noreferrer"
-          variants={iconVariants}
         >
-          <StyledIcon
-            as={FaGithub}
-            whileHover={{
-              scale: 1.2,
-              rotate: 360,
-              transition: { duration: 0.5 }
-            }}
-            whileTap={{ scale: 0.9 }}
-          />
-        </motion.a>
-        <motion.a
+          <motion.div variants={iconVariants}>
+            <StyledIcon
+              as={FaGithub}
+              whileHover={{
+                scale: 1.2,
+                rotate: 360,
+                transition: { duration: 0.5 }
+              }}
+              whileTap={{ scale: 0.9 }}
+            />
+          </motion.div>
+        </a>
+        <a
           href="https://x.com/miguel5gavilan"
           target="_blank"
           rel="noopener noreferrer"
-          variants={iconVariants}
         >
-          <StyledIcon
-            as={FaXTwitter}
-            whileHover={{
-              scale: 1.2,
-              rotate: -360,
-              transition: { duration: 0.5 }
-            }}
-            whileTap={{ scale: 0.9 }}
-          />
-        </motion.a>
+          <motion.div variants={iconVariants}>
+            <StyledIcon
+              as={FaXTwitter}
+              whileHover={{
+                scale: 1.2,
+                rotate: -360,
+                transition: { duration: 0.5 }
+              }}
+              whileTap={{ scale: 0.9 }}
+            />
+          </motion.div>
+        </a>
       </IconsWrapper>
 
       <motion.div
