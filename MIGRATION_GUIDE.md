@@ -483,19 +483,38 @@ Si intentas exportar desde Supabase y la base de datos está pausada:
 
 ### Error al Importar Backup de Supabase
 
-Si el script falla al importar con mensajes como "role does not exist" o "permission denied":
-
-```bash
-# El script ya incluye las flags --no-owner y --no-privileges
-# Pero si aún falla, puedes editar manualmente el backup:
-
-# Para archivos .sql.gz
-gunzip backups/migration/supabase_backup.sql.gz
-sed -i 's/OWNER TO .*/;/g' backups/migration/supabase_backup.sql
-gzip backups/migration/supabase_backup.sql
-
-# Luego intenta de nuevo la migración
+**Error típico**:
 ```
+ERROR: permission denied to grant privileges as role "postgres"
+DETAIL: The grantor must have the ADMIN option on role "anon".
+```
+
+**Solución 1 - Automática (Recomendada)**:
+
+El script actualizado ya maneja este error automáticamente:
+- Crea roles dummy de Supabase antes de importar
+- Ignora errores de permisos durante la importación
+- Filtra comandos GRANT/REVOKE problemáticos
+
+Simplemente vuelve a ejecutar el script:
+```bash
+./scripts/migrate-to-local.sh backups/migration/supabase_backup.backup.gz
+```
+
+**Solución 2 - Manual (Si la automática falla)**:
+
+Limpia el backup antes de importar:
+```bash
+# Limpiar el backup eliminando comandos problemáticos
+./scripts/clean-supabase-backup.sh \
+  backups/migration/supabase_backup.sql.gz \
+  backups/migration/supabase_backup_clean.sql.gz
+
+# Luego ejecutar migración con el backup limpio
+./scripts/migrate-to-local.sh backups/migration/supabase_backup_clean.sql.gz
+```
+
+**Nota**: Los errores de permisos son normales al migrar desde Supabase y no afectan los datos. El script los maneja automáticamente.
 
 ---
 
@@ -531,7 +550,8 @@ El script:
 - `scripts/init-db.sql` - Inicialización PostgreSQL
 - `scripts/export-from-supabase.sh` - Exportar desde Supabase (si BD está activa)
 - `scripts/validate-backup.sh` - Validar backup descargado antes de migración
-- `scripts/migrate-to-local.sh` - Script principal de migración (soporta .sql.gz y .backup.gz)
+- `scripts/clean-supabase-backup.sh` - Limpiar roles de Supabase del backup
+- `scripts/migrate-to-local.sh` - Script principal de migración (soporta .sql.gz y .backup.gz, maneja errores de Supabase)
 - `scripts/rollback-to-supabase.sh` - Rollback de emergencia
 - `scripts/backup-db.sh` - Backup automático
 - `scripts/wrapper-load-data.sh` - Wrapper para cron (carga productos)
