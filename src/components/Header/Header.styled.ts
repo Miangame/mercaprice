@@ -13,14 +13,14 @@ export const Wrapper = styled.header`
     `1px solid ${colors.borderLightGray}`};
 
   ${media.greaterThan('md')`
-    padding: ${({ theme: { size } }: DefaultTheme) => `
+    padding: ${({ theme: { size } }: { theme: DefaultTheme }) => `
       ${size.units(3)} ${size.units(4)}
     `};
   `}
 
   ${media.greaterThan('lg')`
     justify-content: flex-start;
-    gap: ${({ theme: { size } }: DefaultTheme) => size.units(4)};
+    gap: ${({ theme: { size } }: { theme: DefaultTheme }) => size.units(4)};
   `}
 `
 
@@ -30,7 +30,7 @@ export const StyledImg = styled.img<{ $isHide: boolean }>`
   cursor: pointer;
 
   ${media.greaterThan('md')`
-    width: ${({ theme: { size } }: DefaultTheme) => size.units(30)};
+    width: ${({ theme: { size } }: { theme: DefaultTheme }) => size.units(30)};
   `}
 `
 

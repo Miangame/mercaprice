@@ -11,7 +11,7 @@ export const Title = styled.h1`
   font-size: ${({ theme }) => theme.size.units(3)};
 
   ${media.greaterThan('md')`
-    font-size: ${({ theme }: DefaultTheme) => theme.size.units(5)};
+    font-size: ${({ theme }: { theme: DefaultTheme }) => theme.size.units(5)};
   `}
 `
 

@@ -10,7 +10,7 @@ export const Wrapper = styled.div`
   gap: ${({ theme }) => theme.size.units(2)};
 
   ${media.greaterThan('md')`
-    height: ${({ theme }: DefaultTheme) => theme.size.units(25)};
+    height: ${({ theme }: { theme: DefaultTheme }) => theme.size.units(25)};
   `}
 `
 

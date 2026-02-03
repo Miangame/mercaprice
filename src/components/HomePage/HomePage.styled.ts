@@ -10,8 +10,8 @@ export const Wrapper = styled.div`
   padding-top: ${({ theme }) => theme.size.units(2)};
 
   ${media.greaterThan('lg')`
-    padding: ${({ theme }: DefaultTheme) => `0 ${theme.size.units(8)}`};
-    padding-top: ${({ theme }: DefaultTheme) => theme.size.units(4)};
+    padding: ${({ theme }: { theme: DefaultTheme }) => `0 ${theme.size.units(8)}`};
+    padding-top: ${({ theme }: { theme: DefaultTheme }) => theme.size.units(4)};
   `}
 `
 
@@ -36,7 +36,7 @@ export const Title = styled.h2`
   text-align: center;
 
   ${media.greaterThan('md')`
-    font-size: ${({ theme }: DefaultTheme) => theme.size.units(4)};
+    font-size: ${({ theme }: { theme: DefaultTheme }) => theme.size.units(4)};
   `}
 `
 

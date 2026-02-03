@@ -36,7 +36,7 @@ export const Name = styled.p`
   overflow: hidden;
 
   ${media.greaterThan('md')`
-    font-size: ${({ theme }: DefaultTheme) => theme.size.units(2.5)};
+    font-size: ${({ theme }: { theme: DefaultTheme }) => theme.size.units(2.5)};
   `}
 `
 
