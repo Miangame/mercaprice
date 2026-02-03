@@ -32,8 +32,10 @@ Migración de la base de datos de **mercaprice** desde Supabase a PostgreSQL loc
 - [ ] Generar passwords y guardarlas en `.env.docker`
 - [ ] Hacer scripts ejecutables: `chmod +x scripts/*.sh`
 - [ ] Iniciar Docker: `docker-compose --env-file .env.docker up -d`
-- [ ] Backup de Supabase: `./scripts/export-from-supabase.sh`
-- [ ] Ejecutar migración: `./scripts/migrate-to-local.sh backups/migration/supabase_full_XXX.sql.gz`
+- [ ] Backup de Supabase (elegir una opción):
+  - Opción A: `./scripts/export-from-supabase.sh` (si BD está activa)
+  - Opción B: `scp ~/Downloads/backup.gz root@IP:/home/mercaprice/backups/migration/` (si BD está pausada)
+- [ ] Ejecutar migración: `./scripts/migrate-to-local.sh backups/migration/supabase_XXX.backup.gz`
 
 ### Validación
 - [ ] Verificar servicios: `docker ps` y `pm2 status`
@@ -147,6 +149,12 @@ docker exec mercaprice-postgres pg_isready -U mercaprice_user -d mercaprice_db
 
 ### 4. Backup de Supabase (5 min)
 
+Tienes dos opciones para obtener el backup:
+
+#### Opción A: Base de Datos Activa (usar script)
+
+Si tu base de datos de Supabase está activa y accesible:
+
 ```bash
 cd /home/mercaprice
 ./scripts/export-from-supabase.sh
@@ -156,14 +164,53 @@ ls -lh backups/migration/
 # Anotar el nombre: supabase_full_XXXXXXXXX_XXXXXX.sql.gz
 ```
 
+#### Opción B: Base de Datos Pausada (usar backup descargado) ⭐ RECOMENDADO
+
+Si tu base de datos está pausada o tienes un backup descargado manualmente desde Supabase:
+
+**1. (Opcional) Validar el backup descargado** - Desde tu máquina local:
+
+```bash
+# Validar que el backup es correcto antes de transferirlo
+./scripts/validate-backup.sh ~/Downloads/supabase_backup.backup.gz
+```
+
+Esto verifica que el archivo es válido y te indica el comando para transferirlo.
+
+**2. Transferir el backup al servidor** - Desde tu máquina local:
+
+```bash
+# Reemplaza "supabase_backup.backup.gz" con el nombre real de tu archivo
+scp ~/Downloads/supabase_backup.backup.gz root@192.168.18.121:/home/mercaprice/backups/migration/
+
+# O si prefieres usar un nombre más descriptivo:
+scp ~/Downloads/supabase_backup.backup.gz root@192.168.18.121:/home/mercaprice/backups/migration/supabase_full_manual.backup.gz
+```
+
+**3. En el servidor**, verificar que el archivo llegó:
+
+```bash
+ssh root@192.168.18.121
+ls -lh /home/mercaprice/backups/migration/
+```
+
+Deberías ver tu archivo `.backup.gz` o `.sql.gz`.
+
 ---
 
 ### 5. Ejecutar Migración (10-15 min)
 
 ⚠️ **A PARTIR DE AQUÍ HAY DOWNTIME**
 
+El script de migración detecta automáticamente el tipo de archivo y usa la herramienta correcta:
+- **`.sql.gz`** o **`.sql`** → usa `psql`
+- **`.backup.gz`** o **`.backup`** → usa `pg_restore`
+
 ```bash
-# Reemplazar XXXXX con el nombre real del archivo
+# Reemplazar con el nombre real del archivo (puede ser .sql.gz o .backup.gz)
+./scripts/migrate-to-local.sh backups/migration/supabase_full_manual.backup.gz
+
+# O si usaste el script:
 ./scripts/migrate-to-local.sh backups/migration/supabase_full_XXXXXXXXX_XXXXXX.sql.gz
 
 # Escribir 'yes' cuando pregunte
@@ -414,6 +461,42 @@ chmod +x /home/mercaprice/scripts/*.sh
 /home/mercaprice/scripts/wrapper-load-data.sh
 ```
 
+### Base de Datos de Supabase Pausada
+
+Si intentas exportar desde Supabase y la base de datos está pausada:
+
+**Solución 1**: Descargar backup manualmente
+1. Ve al dashboard de Supabase
+2. Project Settings → Backups
+3. Descarga el backup más reciente (formato `.backup.gz`)
+4. Transfiérelo al servidor:
+   ```bash
+   scp ~/Downloads/supabase_backup.backup.gz root@192.168.18.121:/home/mercaprice/backups/migration/
+   ```
+
+**Solución 2**: Si no hay backups disponibles
+1. Intenta restaurar la base de datos desde el dashboard de Supabase
+2. Si no es posible, contacta con el soporte de Supabase
+3. Como último recurso, si tienes un backup local antiguo, úsalo
+
+**Nota**: El script de migración soporta tanto `.sql.gz` como `.backup.gz` automáticamente.
+
+### Error al Importar Backup de Supabase
+
+Si el script falla al importar con mensajes como "role does not exist" o "permission denied":
+
+```bash
+# El script ya incluye las flags --no-owner y --no-privileges
+# Pero si aún falla, puedes editar manualmente el backup:
+
+# Para archivos .sql.gz
+gunzip backups/migration/supabase_backup.sql.gz
+sed -i 's/OWNER TO .*/;/g' backups/migration/supabase_backup.sql
+gzip backups/migration/supabase_backup.sql
+
+# Luego intenta de nuevo la migración
+```
+
 ---
 
 ## 🔄 Rollback a Supabase
@@ -446,8 +529,9 @@ El script:
 
 ### Scripts
 - `scripts/init-db.sql` - Inicialización PostgreSQL
-- `scripts/export-from-supabase.sh` - Exportar desde Supabase
-- `scripts/migrate-to-local.sh` - Script principal de migración
+- `scripts/export-from-supabase.sh` - Exportar desde Supabase (si BD está activa)
+- `scripts/validate-backup.sh` - Validar backup descargado antes de migración
+- `scripts/migrate-to-local.sh` - Script principal de migración (soporta .sql.gz y .backup.gz)
 - `scripts/rollback-to-supabase.sh` - Rollback de emergencia
 - `scripts/backup-db.sh` - Backup automático
 - `scripts/wrapper-load-data.sh` - Wrapper para cron (carga productos)

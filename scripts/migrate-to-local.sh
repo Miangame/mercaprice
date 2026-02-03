@@ -67,11 +67,44 @@ npx prisma migrate deploy
 
 echo ""
 echo "[$(date)] === PASO 6: Importar datos desde backup ==="
-gunzip -c "$BACKUP_FILE" | PGPASSWORD="$DB_PASSWORD" psql \
-  -h localhost \
-  -U mercaprice_user \
-  -d mercaprice_db \
-  --set ON_ERROR_STOP=on
+
+# Detectar el tipo de archivo y usar la herramienta correcta
+if [[ "$BACKUP_FILE" == *.backup.gz ]] || [[ "$BACKUP_FILE" == *.backup ]]; then
+  echo "Detectado formato custom de PostgreSQL (.backup), usando pg_restore..."
+
+  # Si está comprimido, descomprimir primero
+  if [[ "$BACKUP_FILE" == *.gz ]]; then
+    TEMP_BACKUP="/tmp/mercaprice_backup_temp.backup"
+    gunzip -c "$BACKUP_FILE" > "$TEMP_BACKUP"
+    PGPASSWORD="$DB_PASSWORD" pg_restore \
+      -h localhost \
+      -U mercaprice_user \
+      -d mercaprice_db \
+      --no-owner \
+      --no-privileges \
+      --clean \
+      --if-exists \
+      "$TEMP_BACKUP"
+    rm -f "$TEMP_BACKUP"
+  else
+    PGPASSWORD="$DB_PASSWORD" pg_restore \
+      -h localhost \
+      -U mercaprice_user \
+      -d mercaprice_db \
+      --no-owner \
+      --no-privileges \
+      --clean \
+      --if-exists \
+      "$BACKUP_FILE"
+  fi
+else
+  echo "Detectado formato SQL (.sql.gz), usando psql..."
+  gunzip -c "$BACKUP_FILE" | PGPASSWORD="$DB_PASSWORD" psql \
+    -h localhost \
+    -U mercaprice_user \
+    -d mercaprice_db \
+    --set ON_ERROR_STOP=on
+fi
 
 echo ""
 echo "[$(date)] === PASO 7: Actualizar .env con DATABASE_URL local ==="
