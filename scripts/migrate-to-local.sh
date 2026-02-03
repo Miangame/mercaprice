@@ -106,42 +106,51 @@ echo ""
 echo "[$(date)] === PASO 6: Importar datos desde backup ==="
 
 # Detectar el tipo de archivo y usar la herramienta correcta
+IMPORT_LOG="/tmp/mercaprice_import_$TIMESTAMP.log"
+
 if [[ "$BACKUP_FILE" == *.backup.gz ]] || [[ "$BACKUP_FILE" == *.backup ]]; then
   echo "Detectado formato custom de PostgreSQL (.backup), usando pg_restore..."
 
   # Si está comprimido, descomprimir primero
   if [[ "$BACKUP_FILE" == *.gz ]]; then
     TEMP_BACKUP="/tmp/mercaprice_backup_temp.backup"
+    echo "Descomprimiendo backup..."
     gunzip -c "$BACKUP_FILE" > "$TEMP_BACKUP"
+
+    echo "Iniciando importación (esto puede tomar varios minutos)..."
     PGPASSWORD="$DB_PASSWORD" pg_restore \
       -h localhost \
       -U mercaprice_user \
       -d mercaprice_db \
+      --data-only \
       --no-owner \
       --no-privileges \
-      --no-acl \
-      --clean \
-      --if-exists \
-      --exit-on-error \
-      "$TEMP_BACKUP" 2>&1 | grep -v "role.*does not exist" | grep -v "permission denied" || true
+      --disable-triggers \
+      --verbose \
+      "$TEMP_BACKUP" 2>&1 | tee "$IMPORT_LOG" | grep -E "(processing|restoring|error)" | grep -v "role.*does not exist" | grep -v "permission denied to set parameter"
+
+    IMPORT_EXIT_CODE=${PIPESTATUS[0]}
     rm -f "$TEMP_BACKUP"
   else
+    echo "Iniciando importación (esto puede tomar varios minutos)..."
     PGPASSWORD="$DB_PASSWORD" pg_restore \
       -h localhost \
       -U mercaprice_user \
       -d mercaprice_db \
+      --data-only \
       --no-owner \
       --no-privileges \
-      --no-acl \
-      --clean \
-      --if-exists \
-      --exit-on-error \
-      "$BACKUP_FILE" 2>&1 | grep -v "role.*does not exist" | grep -v "permission denied" || true
+      --disable-triggers \
+      --verbose \
+      "$BACKUP_FILE" 2>&1 | tee "$IMPORT_LOG" | grep -E "(processing|restoring|error)" | grep -v "role.*does not exist" | grep -v "permission denied to set parameter"
+
+    IMPORT_EXIT_CODE=${PIPESTATUS[0]}
   fi
 else
   echo "Detectado formato SQL (.sql.gz), usando psql..."
 
-  # Filtrar comandos problemáticos de Supabase
+  # Filtrar comandos problemáticos de Supabase y ejecutar
+  echo "Iniciando importación (esto puede tomar varios minutos)..."
   gunzip -c "$BACKUP_FILE" | \
     grep -v "GRANT.*TO.*anon" | \
     grep -v "GRANT.*TO.*authenticated" | \
@@ -150,16 +159,25 @@ else
     grep -v "REVOKE.*FROM.*authenticated" | \
     grep -v "REVOKE.*FROM.*service_role" | \
     grep -v "ALTER.*OWNER TO postgres" | \
+    grep -v "CREATE SCHEMA.*auth" | \
+    grep -v "CREATE SCHEMA.*storage" | \
     PGPASSWORD="$DB_PASSWORD" psql \
       -h localhost \
       -U mercaprice_user \
       -d mercaprice_db \
       -v ON_ERROR_STOP=0 \
-      2>&1 | grep -v "role.*does not exist" | grep -v "permission denied" || true
+      2>&1 | tee "$IMPORT_LOG" | grep -v "role.*does not exist" | grep -v "permission denied to set parameter"
+
+  IMPORT_EXIT_CODE=${PIPESTATUS[0]}
 fi
 
 echo ""
-echo "[$(date)] Importación completada (errores de permisos ignorados)"
+if [ "$IMPORT_EXIT_CODE" -ne 0 ]; then
+  echo "⚠️  La importación completó con algunos errores (esto es normal con backups de Supabase)"
+  echo "Log completo guardado en: $IMPORT_LOG"
+else
+  echo "✅ Importación completada"
+fi
 
 echo ""
 echo "[$(date)] === PASO 7: Actualizar .env con DATABASE_URL local ==="
@@ -173,19 +191,36 @@ npx prisma generate
 
 echo ""
 echo "[$(date)] === PASO 9: Validar migración ==="
-PGPASSWORD="$DB_PASSWORD" psql -h localhost -U mercaprice_user -d mercaprice_db -t -c "
-SELECT 'Product: ' || COUNT(*) FROM \"Product\"
-UNION ALL SELECT 'PriceHistory: ' || COUNT(*) FROM \"PriceHistory\"
-UNION ALL SELECT 'Warehouse: ' || COUNT(*) FROM \"Warehouse\";
-"
 
-echo "Probando Full-Text Search..."
-PGPASSWORD="$DB_PASSWORD" psql -h localhost -U mercaprice_user -d mercaprice_db -c "
-SELECT displayName
+# Contar registros
+PRODUCT_COUNT=$(PGPASSWORD="$DB_PASSWORD" psql -h localhost -U mercaprice_user -d mercaprice_db -t -c "SELECT COUNT(*) FROM \"Product\"" | tr -d ' ')
+PRICE_COUNT=$(PGPASSWORD="$DB_PASSWORD" psql -h localhost -U mercaprice_user -d mercaprice_db -t -c "SELECT COUNT(*) FROM \"PriceHistory\"" | tr -d ' ')
+WAREHOUSE_COUNT=$(PGPASSWORD="$DB_PASSWORD" psql -h localhost -U mercaprice_user -d mercaprice_db -t -c "SELECT COUNT(*) FROM \"Warehouse\"" | tr -d ' ')
+
+echo "Conteos de registros:"
+echo "  Product: $PRODUCT_COUNT"
+echo "  PriceHistory: $PRICE_COUNT"
+echo "  Warehouse: $WAREHOUSE_COUNT"
+echo ""
+
+if [ "$PRODUCT_COUNT" -eq 0 ]; then
+  echo "⚠️  ADVERTENCIA: No se importaron productos"
+  echo "⚠️  Por favor ejecuta el script de diagnóstico:"
+  echo "    ./scripts/diagnose-import.sh"
+  echo ""
+  echo "Log de importación guardado en: $IMPORT_LOG"
+else
+  echo "✅ Se importaron $PRODUCT_COUNT productos"
+
+  echo ""
+  echo "Probando Full-Text Search..."
+  PGPASSWORD="$DB_PASSWORD" psql -h localhost -U mercaprice_user -d mercaprice_db -c "
+SELECT \"displayName\"
 FROM \"Product\"
 WHERE searchvector @@ to_tsquery('spanish', 'leche')
 LIMIT 3;
-"
+" 2>&1 || echo "⚠️  Full-Text Search no disponible aún (se puede regenerar después)"
+fi
 
 echo ""
 echo "[$(date)] === PASO 10: Reiniciar aplicación con PM2 ==="
