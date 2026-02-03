@@ -266,14 +266,27 @@ const readSitemap = async (urlOrPath) => {
           if (error.response?.status === 404) {
             const productId = productIdMatch[0]
 
-            await prisma.product.update({
-              where: { externalId: productId },
-              data: { deletedAt: new Date() }
+            const existingProduct = await prisma.product.findUnique({
+              where: { externalId: productId }
             })
 
-            console.log(`❌ Product not found. Deleted: ${productId}`)
-            await saveToErrorLog(`Product not found. Deleted: ${productId}`)
-            saveErrors.push(`Product not found. Deleted: ${productId}`)
+            if (existingProduct) {
+              await prisma.product.update({
+                where: { externalId: productId },
+                data: { deletedAt: new Date() }
+              })
+
+              console.log(`❌ Product not found. Deleted: ${productId}`)
+              await saveToErrorLog(`Product not found. Deleted: ${productId}`)
+              saveErrors.push(`Product not found. Deleted: ${productId}`)
+            } else {
+              console.log(
+                `⚠️ Product not found in API and doesn't exist in DB: ${productId}`
+              )
+              await saveToErrorLog(
+                `Product not found in API and doesn't exist in DB: ${productId}`
+              )
+            }
           }
         }
       } else {
