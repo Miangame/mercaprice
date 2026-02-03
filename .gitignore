@@ -41,3 +41,11 @@ yarn-error.log*
 next-env.d.ts
 
 error.log
+
+# migration and deployment
+postgres-data/
+pgadmin-data/
+backups/
+logs/
+.env.docker
+.env.supabase.backup

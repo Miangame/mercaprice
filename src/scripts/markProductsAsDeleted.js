@@ -11,38 +11,45 @@ const prisma = new PrismaClient()
 
 const SKIP_RATE_LIMIT = 10
 
-const app = express()
-const server = http.createServer(app)
-const io = new Server(server)
+const HEADLESS_MODE = process.env.HEADLESS === 'true'
 
+let app, server, io
 const logs = []
 
-const originalConsoleLog = console.log
-console.log = (...args) => {
-  const message = `[${new Date().toISOString()}] ` + args.join(' ')
-  logs.push(message)
-  if (logs.length > 500) logs.shift()
+if (!HEADLESS_MODE) {
+  app = express()
+  server = http.createServer(app)
+  io = new Server(server)
 
-  originalConsoleLog(...args)
-  io.emit('new_log', message)
+  const originalConsoleLog = console.log
+  console.log = (...args) => {
+    const message = `[${new Date().toISOString()}] ` + args.join(' ')
+    logs.push(message)
+    if (logs.length > 500) logs.shift()
+
+    originalConsoleLog(...args)
+    io.emit('new_log', message)
+  }
+
+  app.get('/logs', (req, res) => {
+    res.sendFile(__dirname + '/logs.html')
+  })
+
+  app.get('/logs-data', (req, res) => {
+    res.json(logs)
+  })
+
+  io.on('connection', (socket) => {
+    console.log('🟢 Client connected to WebSockets')
+    socket.emit('logs', logs)
+  })
+
+  server.listen(3001, () =>
+    console.log('📡 Logs server in http://localhost:3001/logs')
+  )
+} else {
+  console.log('🤖 Running in HEADLESS mode (no WebSocket server)')
 }
-
-app.get('/logs', (req, res) => {
-  res.sendFile(__dirname + '/logs.html')
-})
-
-app.get('/logs-data', (req, res) => {
-  res.json(logs)
-})
-
-io.on('connection', (socket) => {
-  console.log('🟢 Client connected to WebSockets')
-  socket.emit('logs', logs)
-})
-
-server.listen(3001, () =>
-  console.log('📡 Logs server in http://localhost:3001/logs')
-)
 
 const saveToErrorLog = async (message) => {
   const date = new Date().toISOString()
@@ -232,11 +239,16 @@ const markProductsAsDeleted = async (urlOrPath) => {
 
     await sendTelegramMessage(telegramMessage)
 
-    server.close()
+    if (!HEADLESS_MODE && server) {
+      server.close()
+    }
+
+    process.exit(0)
   } catch (error) {
     console.log('❌ General error in script:', error.message)
     await saveToErrorLog(`General error in script: ${error.message}`)
     await sendTelegramMessage(`❌ General error in script: ${error.message}`)
+    process.exit(1)
   }
 }
 

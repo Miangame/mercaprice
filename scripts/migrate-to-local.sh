@@ -1,0 +1,119 @@
+#!/bin/bash
+
+set -e
+
+BACKUP_FILE="$1"
+
+if [ -z "$BACKUP_FILE" ]; then
+  echo "Uso: $0 <ruta_backup_supabase.sql.gz>"
+  exit 1
+fi
+
+if [ ! -f "$BACKUP_FILE" ]; then
+  echo "Error: Archivo $BACKUP_FILE no encontrado"
+  exit 1
+fi
+
+echo "======================================"
+echo "  MIGRACIÓN SUPABASE → LOCAL"
+echo "======================================"
+echo ""
+echo "Backup a restaurar: $BACKUP_FILE"
+echo ""
+read -p "¿Continuar? (yes/no): " CONFIRM
+
+if [ "$CONFIRM" != "yes" ]; then
+  echo "Migración cancelada"
+  exit 0
+fi
+
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+APP_DIR="/home/mercaprice"
+MIGRATION_LOG="$APP_DIR/logs/migration_${TIMESTAMP}.log"
+
+mkdir -p "$APP_DIR/logs"
+exec > >(tee -a "$MIGRATION_LOG") 2>&1
+
+echo "[$(date)] === PASO 1: Backup del .env actual ==="
+cp "$APP_DIR/.env" "$APP_DIR/.env.supabase.backup"
+
+echo ""
+echo "[$(date)] === PASO 2: Detener PM2 (si está corriendo) ==="
+pm2 stop mercaprice || echo "PM2 no está corriendo"
+
+echo ""
+echo "[$(date)] === PASO 3: Verificar PostgreSQL local ==="
+docker exec mercaprice-postgres pg_isready -U mercaprice_user -d mercaprice_db
+if [ $? -ne 0 ]; then
+  echo "Error: PostgreSQL no está disponible"
+  exit 1
+fi
+
+echo ""
+echo "[$(date)] === PASO 4: Limpiar base de datos local ==="
+source "$APP_DIR/.env.docker"
+PGPASSWORD="$DB_PASSWORD" psql \
+  -h localhost \
+  -U mercaprice_user \
+  -d mercaprice_db \
+  -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+echo ""
+echo "[$(date)] === PASO 5: Aplicar schema de Prisma ==="
+cd "$APP_DIR"
+TEMP_DB_URL="postgresql://mercaprice_user:${DB_PASSWORD}@localhost:5432/mercaprice_db"
+export DATABASE_URL="$TEMP_DB_URL"
+npx prisma migrate deploy
+
+echo ""
+echo "[$(date)] === PASO 6: Importar datos desde backup ==="
+gunzip -c "$BACKUP_FILE" | PGPASSWORD="$DB_PASSWORD" psql \
+  -h localhost \
+  -U mercaprice_user \
+  -d mercaprice_db \
+  --set ON_ERROR_STOP=on
+
+echo ""
+echo "[$(date)] === PASO 7: Actualizar .env con DATABASE_URL local ==="
+grep -v "^DATABASE_URL=" "$APP_DIR/.env" > "$APP_DIR/.env.tmp" || true
+echo "DATABASE_URL=\"postgresql://mercaprice_user:${DB_PASSWORD}@localhost:5432/mercaprice_db\"" >> "$APP_DIR/.env.tmp"
+mv "$APP_DIR/.env.tmp" "$APP_DIR/.env"
+
+echo ""
+echo "[$(date)] === PASO 8: Regenerar Prisma Client ==="
+npx prisma generate
+
+echo ""
+echo "[$(date)] === PASO 9: Validar migración ==="
+PGPASSWORD="$DB_PASSWORD" psql -h localhost -U mercaprice_user -d mercaprice_db -t -c "
+SELECT 'Product: ' || COUNT(*) FROM \"Product\"
+UNION ALL SELECT 'PriceHistory: ' || COUNT(*) FROM \"PriceHistory\"
+UNION ALL SELECT 'Warehouse: ' || COUNT(*) FROM \"Warehouse\";
+"
+
+echo "Probando Full-Text Search..."
+PGPASSWORD="$DB_PASSWORD" psql -h localhost -U mercaprice_user -d mercaprice_db -c "
+SELECT displayName
+FROM \"Product\"
+WHERE searchvector @@ to_tsquery('spanish', 'leche')
+LIMIT 3;
+"
+
+echo ""
+echo "[$(date)] === PASO 10: Reiniciar aplicación con PM2 ==="
+pm2 restart mercaprice || pm2 start ecosystem.config.js
+
+echo ""
+echo "[$(date)] === PASO 11: Verificar estado ==="
+sleep 3
+pm2 status
+pm2 logs mercaprice --lines 20
+
+echo ""
+echo "================================================================"
+echo "  ✅ MIGRACIÓN COMPLETADA"
+echo "================================================================"
+echo ""
+echo "Logs: $MIGRATION_LOG"
+echo "Web: http://192.168.18.121:3000"
+echo "pgAdmin: http://192.168.18.121:5050"
