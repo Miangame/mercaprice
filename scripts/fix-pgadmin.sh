@@ -21,11 +21,11 @@ echo ""
 
 # Detener contenedor
 echo "Deteniendo pgAdmin..."
-docker-compose --env-file .env.docker stop pgadmin
+docker compose --env-file .env.docker stop pgadmin
 
 # Eliminar contenedor
 echo "Eliminando contenedor..."
-docker-compose --env-file .env.docker rm -f pgadmin
+docker compose --env-file .env.docker rm -f pgadmin
 
 # Arreglar permisos del directorio
 echo "Corrigiendo permisos del directorio de datos..."
@@ -35,7 +35,7 @@ sudo chmod -R 755 /home/mercaprice/pgadmin-data
 # Reiniciar contenedor
 echo ""
 echo "Reiniciando pgAdmin..."
-docker-compose --env-file .env.docker up -d pgadmin
+docker compose --env-file .env.docker up -d pgadmin
 
 echo ""
 echo "Esperando 10 segundos..."
