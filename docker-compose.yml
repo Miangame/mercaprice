@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
     user: root
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@mercaprice.local
+      PGADMIN_DEFAULT_EMAIL: admin@mercaprice.com
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_LISTEN_PORT: 80
