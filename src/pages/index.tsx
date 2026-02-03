@@ -59,13 +59,15 @@ const Home = () => {
           : 'Productos'}
       </Title>
       <ProductsWrapper>
-        {products?.map((item) => (
-          <ProductCard
-            key={item.id}
-            item={item}
-            onClick={handleClickItem(item.id)}
-          />
-        ))}
+        {products
+          ?.filter((p) => !!p)
+          .map((item) => (
+            <ProductCard
+              key={item.id}
+              item={item}
+              onClick={handleClickItem(item.id)}
+            />
+          ))}
       </ProductsWrapper>
       {hasMore && !isValidating && (
         <LoadMoreButton onClick={handleLoadMore} disabled={isValidating}>
