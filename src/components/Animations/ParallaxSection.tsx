@@ -12,17 +12,17 @@ export const ParallaxSection = ({
   speed = 0.5,
   className
 }: ParallaxSectionProps) => {
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef(null)
   const { scrollYProgress } = useScroll({
-    target: ref,
+    target: ref as any,
     offset: ['start end', 'end start']
   })
 
   const y = useTransform(scrollYProgress, [0, 1], [0, -50 * speed])
 
   return (
-    <motion.div ref={ref} style={{ y }} className={className}>
-      {children}
-    </motion.div>
+    <div ref={ref} className={className}>
+      <motion.div style={{ y } as any}>{children}</motion.div>
+    </div>
   )
 }
