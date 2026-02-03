@@ -1,16 +1,28 @@
 import { CiSearch } from 'react-icons/ci'
 import styled, { DefaultTheme } from 'styled-components'
+import { motion } from 'framer-motion'
 
 import { media } from '@/theme/media'
 
-export const Wrapper = styled.header`
+export const Wrapper = styled(motion.header)`
+  position: sticky;
+  top: 0;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: ${({ theme: { size } }) => size.units(2)};
   padding: ${({ theme: { size } }) => size.units(3)};
-  border-bottom: ${({ theme: { colors } }) =>
-    `1px solid ${colors.borderLightGray}`};
+
+  /* Glassmorphism */
+  background: ${({ theme }) => theme.colors.glass.background};
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+  border-bottom: 1px solid ${({ theme }) => theme.colors.glass.border};
+  box-shadow: ${({ theme }) => theme.colors.glass.shadow};
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   ${media.greaterThan('md')`
     padding: ${({ theme: { size } }: { theme: DefaultTheme }) => `
@@ -28,36 +40,56 @@ export const StyledImg = styled.img<{ $isHide: boolean }>`
   width: ${({ theme: { size } }) => size.units(6)};
   opacity: ${({ $isHide }) => ($isHide ? 0 : 1)};
   cursor: pointer;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05) rotate(-2deg);
+  }
 
   ${media.greaterThan('md')`
     width: ${({ theme: { size } }: { theme: DefaultTheme }) => size.units(30)};
   `}
 `
 
-export const StyledInput = styled.input(({ theme: { size, colors } }) => ({
-  borderRadius: size.units(2.5),
-  border: `1px solid ${colors.borderGray}`,
-  backgroundColor: colors.backgroundGray,
-  padding: size.units(1),
-  paddingLeft: size.units(6),
+export const InputWrapper = styled(motion.div)`
+  position: relative;
+  flex: 1;
+  max-width: 600px;
+`
 
-  '&:focus': {
-    outline: `1px solid ${colors.primary}`
+export const StyledInput = styled.input`
+  width: 100%;
+  border-radius: ${({ theme: { size } }) => size.units(3)};
+  border: 2px solid ${({ theme }) => theme.colors.borderGray};
+  background-color: ${({ theme }) => theme.colors.backgroundGray};
+  padding: ${({ theme: { size } }) => `${size.units(1.5)} ${size.units(6)}`};
+  font-size: ${({ theme: { size } }) => size.units(2)};
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary};
+    background-color: ${({ theme }) => theme.colors.white};
+    box-shadow: 0 0 0 4px rgba(34, 158, 107, 0.1);
   }
-}))
 
-export const StyledSearchIcon = styled(CiSearch)(({ theme: { size } }) => ({
-  width: size.units(3),
-  height: size.units(3)
-}))
-
-export const InputWrapper = styled.div(({ theme: { size } }) => ({
-  position: 'relative',
-
-  [StyledSearchIcon]: {
-    position: 'absolute',
-    top: '50%',
-    left: size.units(2),
-    transform: 'translateY(-50%)'
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.textLight};
   }
-}))
+`
+
+export const StyledSearchIcon = styled(CiSearch)`
+  width: ${({ theme: { size } }) => size.units(3)};
+  height: ${({ theme: { size } }) => size.units(3)};
+  position: absolute;
+  top: 50%;
+  left: ${({ theme: { size } }) => size.units(2)};
+  transform: translateY(-50%);
+  color: ${({ theme }) => theme.colors.textLight};
+  transition: color 0.2s;
+  pointer-events: none;
+
+  ${StyledInput}:focus ~ & {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`

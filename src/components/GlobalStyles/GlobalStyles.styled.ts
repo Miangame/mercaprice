@@ -11,9 +11,10 @@ const roboto = Roboto({
   weight: ['400', '700']
 })
 
-export const GlobalStyles = createGlobalStyle<{ $isDarkMode?: boolean }>`
+export const GlobalStyles = createGlobalStyle`
   html, body {
     font-family: ${poppins.style.fontFamily}, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   body {
@@ -21,6 +22,17 @@ export const GlobalStyles = createGlobalStyle<{ $isDarkMode?: boolean }>`
     flex-direction: column;
     min-height: 100vh;
     overscroll-behavior: none;
+  }
+
+  /* Dark mode support */
+  .dark {
+    background-color: #0f1419;
+    color: #e2e8f0;
+  }
+
+  .dark body {
+    background-color: #0f1419;
+    color: #e2e8f0;
   }
 
   #__next {
@@ -35,5 +47,12 @@ export const GlobalStyles = createGlobalStyle<{ $isDarkMode?: boolean }>`
   padding, span, li {
     font-family: ${roboto.style.fontFamily}, sans-serif;
     font-weight: 400;
+  }
+
+  /* Smooth transitions for all theme changes */
+  * {
+    transition-property: background-color, border-color, color;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
   }
 `

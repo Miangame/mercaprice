@@ -2,6 +2,8 @@ import 'react-responsive-carousel/lib/styles/carousel.min.css'
 
 import { Carousel } from 'react-responsive-carousel'
 import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from 'react-icons/fa'
+import { motion } from 'framer-motion'
+import { useState } from 'react'
 
 import { NextButton, PrevButton } from './ProductImagesCarousel.styled'
 
@@ -12,6 +14,7 @@ interface ProductImagesCarouselProps {
 export const ProductImagesCarousel = ({
   images
 }: ProductImagesCarouselProps) => {
+  const [isZoomed, setIsZoomed] = useState(false)
   const getArrowNext = (
     clickHandler: () => void,
     hasPrev: boolean,
@@ -55,18 +58,36 @@ export const ProductImagesCarousel = ({
   }
 
   return (
-    <Carousel
-      showArrows
-      showThumbs={false}
-      showIndicators={false}
-      renderArrowNext={getArrowNext}
-      renderArrowPrev={getArrowPrev}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
     >
-      {images.map((image, index) => (
-        <div key={index}>
-          <img src={image} alt={`Product image ${index + 1}`} />
-        </div>
-      ))}
-    </Carousel>
+      <Carousel
+        showArrows
+        showThumbs={false}
+        showIndicators={false}
+        renderArrowNext={getArrowNext}
+        renderArrowPrev={getArrowPrev}
+        animationHandler="fade"
+        swipeable
+      >
+        {images.map((image, index) => (
+          <motion.div
+            key={index}
+            whileHover={{ scale: isZoomed ? 1 : 1.05 }}
+            onClick={() => setIsZoomed(!isZoomed)}
+            style={{ cursor: isZoomed ? 'zoom-out' : 'zoom-in' }}
+          >
+            <motion.img
+              src={image}
+              alt={`Product image ${index + 1}`}
+              animate={{ scale: isZoomed ? 1.5 : 1 }}
+              transition={{ duration: 0.3 }}
+            />
+          </motion.div>
+        ))}
+      </Carousel>
+    </motion.div>
   )
 }

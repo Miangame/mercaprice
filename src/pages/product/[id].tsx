@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react'
 import useSWR from 'swr'
 import { GetServerSideProps } from 'next'
 import { FaExternalLinkAlt } from 'react-icons/fa'
+import { motion } from 'framer-motion'
 
 import { PricesChart } from '@/components/ProductPage/components/PricesChart/PricesChart'
 import {
@@ -126,89 +127,134 @@ const ProductPage = ({
     }
   }, [product, originalData, updateProduct])
 
+  const pageVariants = {
+    initial: { opacity: 0, x: -20 },
+    animate: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.4,
+        ease: [0.4, 0, 0.2, 1]
+      }
+    },
+    exit: {
+      opacity: 0,
+      x: 20,
+      transition: { duration: 0.3 }
+    }
+  }
+
   return (
-    <Wrapper>
-      <Title>{product?.displayName}</Title>
-      <ColumnsWrapper>
-        <LeftColumn>
-          <CarouselWrapper>
-            {originalData?.photos ? (
-              <ProductImagesCarousel
-                images={originalData?.photos?.map((photo) => photo.regular)}
-              />
-            ) : (
-              <FakeImage />
-            )}
-          </CarouselWrapper>
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      <Wrapper>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Title>{product?.displayName}</Title>
+        </motion.div>
 
-          <PricesWrapper>
-            <Subtitle>Información de precios</Subtitle>
-            <Price>
-              Precio unitario: <span>{product?.unitPrice}€</span>
-            </Price>
-            <Price>
-              Precio por volumen: <span>{product?.bulkPrice}€</span> (
-              {product?.referenceFormat})
-            </Price>
+        <ColumnsWrapper>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <LeftColumn>
+              <CarouselWrapper>
+                {originalData?.photos ? (
+                  <ProductImagesCarousel
+                    images={originalData?.photos?.map((photo) => photo.regular)}
+                  />
+                ) : (
+                  <FakeImage />
+                )}
+              </CarouselWrapper>
 
-            <StyledButton
-              href={originalData?.share_url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Ver en tienda
-              <FaExternalLinkAlt />
-            </StyledButton>
-          </PricesWrapper>
+              <PricesWrapper>
+                <Subtitle>Información de precios</Subtitle>
+                <Price>
+                  Precio unitario: <span>{product?.unitPrice}€</span>
+                </Price>
+                <Price>
+                  Precio por volumen: <span>{product?.bulkPrice}€</span> (
+                  {product?.referenceFormat})
+                </Price>
 
-          <NutritionalInfoWrapper>
-            <Subtitle>Información nutricional</Subtitle>
-            {nutritionalInfo?.status !== 0 ? (
-              <>
-                {filterNutriInfo.map(({ label, key, unitKey, extraKey }) => {
-                  const nutriments = nutritionalInfo?.product
-                    .nutriments as Record<string, any>
-                  return (
-                    <p key={key}>
-                      {label}:{' '}
-                      <span>
-                        {`${nutriments[key]} ${nutriments[unitKey] ?? ''}${extraKey ? ` | ${nutriments[extraKey] ?? ''}` : ''}`}
-                      </span>
-                    </p>
-                  )
-                })}
-              </>
-            ) : (
-              <p>No hay información nutricional disponible.</p>
-            )}
-          </NutritionalInfoWrapper>
-        </LeftColumn>
+                <StyledButton
+                  href={originalData?.share_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ver en tienda
+                  <FaExternalLinkAlt />
+                </StyledButton>
+              </PricesWrapper>
 
-        <PricesHistoryWrapper>
-          <ChartWrapper>
-            {priceHistoryUnitPrices ? (
-              <PricesChart
-                title="Histórico de precios por unidad"
-                priceHistory={priceHistoryUnitPrices}
-              />
-            ) : (
-              <p>No hay historial de precios por unidad disponible.</p>
-            )}
-          </ChartWrapper>
+              <NutritionalInfoWrapper>
+                <Subtitle>Información nutricional</Subtitle>
+                {nutritionalInfo?.status !== 0 ? (
+                  <>
+                    {filterNutriInfo.map(
+                      ({ label, key, unitKey, extraKey }) => {
+                        const nutriments = nutritionalInfo?.product
+                          .nutriments as Record<string, any>
+                        return (
+                          <p key={key}>
+                            {label}:{' '}
+                            <span>
+                              {`${nutriments[key]} ${nutriments[unitKey] ?? ''}${extraKey ? ` | ${nutriments[extraKey] ?? ''}` : ''}`}
+                            </span>
+                          </p>
+                        )
+                      }
+                    )}
+                  </>
+                ) : (
+                  <p>No hay información nutricional disponible.</p>
+                )}
+              </NutritionalInfoWrapper>
+            </LeftColumn>
+          </motion.div>
 
-          <ChartWrapper>
-            {priceHistoryBulkPrices ? (
-              <PricesChart
-                title="Histórico de precios por volumen"
-                priceHistory={priceHistoryBulkPrices}
-              />
-            ) : (
-              <p>No hay historial de precios por volumen disponible.</p>
-            )}
-          </ChartWrapper>
-        </PricesHistoryWrapper>
-      </ColumnsWrapper>
-    </Wrapper>
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <PricesHistoryWrapper>
+              <ChartWrapper>
+                {priceHistoryUnitPrices ? (
+                  <PricesChart
+                    title="Histórico de precios por unidad"
+                    priceHistory={priceHistoryUnitPrices}
+                  />
+                ) : (
+                  <p>No hay historial de precios por unidad disponible.</p>
+                )}
+              </ChartWrapper>
+
+              <ChartWrapper>
+                {priceHistoryBulkPrices ? (
+                  <PricesChart
+                    title="Histórico de precios por volumen"
+                    priceHistory={priceHistoryBulkPrices}
+                  />
+                ) : (
+                  <p>No hay historial de precios por volumen disponible.</p>
+                )}
+              </ChartWrapper>
+            </PricesHistoryWrapper>
+          </motion.div>
+        </ColumnsWrapper>
+      </Wrapper>
+    </motion.div>
   )
 }
 
